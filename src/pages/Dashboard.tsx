@@ -13,6 +13,7 @@ import {
   Sparkles,
   TrendingUp,
   Check,
+  ShieldCheck,
 } from 'lucide-react';
 import { useStore, selectTodayLog, selectMasteredCount, BLANK_DAY } from '@/store/useStore';
 import { Card, Chip, ProgressBar, SectionHeader, Stat } from '@/components/ui/primitives';
@@ -68,11 +69,17 @@ export function Dashboard() {
   const history = useStore((s) => s.history);
   const srs = useStore((s) => s.srs);
   const week = useStore((s) => s.week);
+  const lastBackupAt = useStore((s) => s.lastBackupAt);
   const today = useStore(selectTodayLog) ?? BLANK_DAY;
   const mastered = useStore(selectMasteredCount);
 
   const lv = levelFromXp(xp);
   const due = dueCards(srs).length;
+
+  // Nhắc sao lưu khi đã có ít nhất 3 ngày học và chưa sao lưu trong 3 tuần
+  const needsBackup =
+    history.length >= 3 &&
+    (lastBackupAt === null || Date.now() - lastBackupAt > 21 * 86400000);
   const missions = useMemo(() => missionsForWeek(weekKey()), []);
   const wkTotals = week.key === weekKey() ? week.totals : null;
 
@@ -192,6 +199,30 @@ export function Dashboard() {
             </p>
           </div>
           <ArrowRight size={18} className="shrink-0 text-amber" />
+        </Link>
+      )}
+
+      {/* ---------------- Nhắc sao lưu ----------------
+       * Tiến độ chỉ nằm trong trình duyệt. Người ta không bao giờ tự nhớ sao lưu
+       * cho tới lúc mất sạch, nên app phải chủ động nhắc khi đã có gì để mất. */}
+      {needsBackup && (
+        <Link
+          to="/settings"
+          className="card card-hover flex items-center gap-4 border-sky/30 bg-sky/[.06] p-5"
+        >
+          <div className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-sky/15 text-sky">
+            <ShieldCheck size={20} />
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="text-sm font-bold text-ink">
+              {history.length} ngày học đang chỉ nằm trong trình duyệt này
+            </div>
+            <p className="text-xs leading-relaxed text-muted">
+              Xoá dữ liệu duyệt web, đổi máy, hay dùng Safari trên iPhone mà nghỉ một tuần — là
+              mất hết. Tải file sao lưu mất 5 giây.
+            </p>
+          </div>
+          <ArrowRight size={18} className="shrink-0 text-sky" />
         </Link>
       )}
 

@@ -56,6 +56,8 @@ interface StoreState {
    * mình là cách ghi nhớ mạnh nhất — mạnh hơn mọi mẹo do người khác soạn sẵn.
    */
   notes: Record<string, string>;
+  /** Lần cuối tải file sao lưu (timestamp ms). Dùng để nhắc khi đã lâu không sao lưu. */
+  lastBackupAt: number | null;
   onboarded: boolean;
 
   /* actions */
@@ -65,6 +67,7 @@ interface StoreState {
   markWeak: (id: string) => void;
   clearWeak: (id: string) => void;
   setNote: (id: string, text: string) => void;
+  markBackedUp: () => void;
   finishScenario: (id: string, score: number) => void;
   setSettings: (patch: Partial<Settings>) => void;
   dismissAchievements: () => void;
@@ -120,6 +123,7 @@ export const useStore = create<StoreState>()(
       bestReactionMs: 0,
       weakIds: {},
       notes: {},
+      lastBackupAt: null,
       onboarded: false,
 
       log: (d) =>
@@ -267,6 +271,8 @@ export const useStore = create<StoreState>()(
 
       setSettings: (patch) => set((s) => ({ settings: { ...s.settings, ...patch } })),
 
+      markBackedUp: () => set({ lastBackupAt: Date.now() }),
+
       dismissAchievements: () => set({ newAchievements: [] }),
 
       completeOnboarding: () => set({ onboarded: true }),
@@ -287,6 +293,7 @@ export const useStore = create<StoreState>()(
           bestReactionMs: 0,
           weakIds: {},
           notes: {},
+          lastBackupAt: null,
           onboarded: false,
           settings: { ...DEFAULT_SETTINGS, ...get().settings, name: get().settings.name },
         }),

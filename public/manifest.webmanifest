@@ -1,0 +1,26 @@
+{
+  "name": "EchoFluent — Luyện phản xạ tiếng Anh",
+  "short_name": "EchoFluent",
+  "description": "Luyện phản xạ giao tiếp tiếng Anh cho dev Việt Nam",
+  "lang": "vi",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#090a0e",
+  "theme_color": "#090a0e",
+  "icons": [
+    {
+      "src": "./icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

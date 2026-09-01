@@ -328,6 +328,46 @@ describe('store — cài đặt và xoá dữ liệu', () => {
     expect(useStore.getState().settings.dailyGoalMin).toBe(15);
   });
 
+  it('ghi lại mốc sao lưu để biết khi nào cần nhắc lại', () => {
+    expect(useStore.getState().lastBackupAt).toBeNull();
+    useStore.getState().markBackedUp();
+    expect(useStore.getState().lastBackupAt).toBe(Date.now());
+  });
+
+  it('toàn bộ tiến độ phải chuyển được qua JSON mà không mất gì', () => {
+    // Đây chính là cơ chế lưu vào trình duyệt và cơ chế sao lưu ra file.
+    // Nếu có trường nào không tuần tự hoá được thì người học sẽ mất tiến độ.
+    const { log, grade, setNote, finishScenario } = useStore.getState();
+    log({ drills: 3, listens: 2, xp: 50, minutes: 4, reactionMs: 1800 });
+    grade('c001', 'chunk', 'good');
+    setNote('c001', 'ghi chú thử');
+    finishScenario('s01', 72);
+
+    const before = useStore.getState();
+    const revived = JSON.parse(
+      JSON.stringify({
+        xp: before.xp,
+        streak: before.streak,
+        totals: before.totals,
+        history: before.history,
+        srs: before.srs,
+        notes: before.notes,
+        scenarioDone: before.scenarioDone,
+        achievements: before.achievements,
+        settings: before.settings,
+        bestReactionMs: before.bestReactionMs,
+      }),
+    );
+
+    expect(revived.xp).toBe(before.xp);
+    expect(revived.history).toEqual(before.history);
+    expect(revived.srs).toEqual(before.srs);
+    expect(revived.notes).toEqual(before.notes);
+    expect(revived.scenarioDone).toEqual(before.scenarioDone);
+    expect(revived.settings).toEqual(before.settings);
+    expect(revived.bestReactionMs).toBe(1800);
+  });
+
   it('xoá toàn bộ tiến độ nhưng giữ lại tên người dùng', () => {
     useStore.getState().setSettings({ name: 'Thịnh' });
     useStore.getState().log({ drills: 5, xp: 100 });

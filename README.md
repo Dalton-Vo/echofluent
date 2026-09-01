@@ -186,12 +186,29 @@ Vì Pages phục vụ trang ở thư mục con `/echofluent/`, mọi đường d
 `asset()` trong [`src/lib/utils.ts`](src/lib/utils.ts). Thêm ảnh mới mà quên bọc qua nó
 thì ảnh sẽ chạy ở máy nhưng 404 sau khi deploy.
 
-## Sao lưu tiến độ
+## Tiến độ được lưu thế nào
 
-Dữ liệu nằm trong `localStorage` của trình duyệt. Xoá dữ liệu duyệt web là **mất sạch**.
+App **có nhớ**: XP, chuỗi ngày, bộ thẻ ôn, ghi chú, huy hiệu, tình huống đã diễn — tất cả
+tự lưu, đóng trình duyệt mở lại vẫn còn nguyên. Không cần đăng nhập.
 
-Vào **Cài đặt → Dữ liệu → Tải file sao lưu** để xuất một file JSON. Mỗi tháng làm một lần
-là đủ an tâm. Nút **Khôi phục từ file** đưa mọi thứ trở lại.
+Nhưng nó lưu trong `localStorage`, nên có ba giới hạn thật:
+
+| Tình huống | Kết quả |
+|---|---|
+| Đóng tab, tắt máy, mở lại | ✅ còn nguyên |
+| Điện thoại và máy tính | ⚠️ hai kho **riêng biệt**, không tự đồng bộ |
+| Bản localhost và bản trên mạng | ⚠️ cũng là hai kho riêng |
+| Xoá dữ liệu duyệt web / dùng ẩn danh | ❌ mất sạch |
+| Safari trên iPhone, nghỉ hơn 7 ngày | ❌ iOS tự dọn dữ liệu của web thường |
+
+**Hai việc nên làm:**
+
+1. **Thêm vào màn hình chính** (iPhone: nút Chia sẻ → *Thêm vào MH chính*; Android Chrome:
+   menu → *Cài đặt ứng dụng*). App mở toàn màn hình như app thật, **và quan trọng hơn**:
+   trên iPhone nó thoát khỏi cơ chế tự dọn dữ liệu sau 7 ngày.
+2. **Thỉnh thoảng sao lưu.** Cài đặt → Dữ liệu → *Tải file sao lưu* ra một file JSON.
+   Đây cũng là cách chuyển tiến độ từ máy này sang máy khác — máy kia bấm *Khôi phục từ
+   file*. App tự nhắc khi bạn đã học được vài ngày mà chưa sao lưu lần nào.
 
 ---
 

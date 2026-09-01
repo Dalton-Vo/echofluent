@@ -28,6 +28,8 @@ export function Settings() {
 
   const srs = useStore((s) => s.srs);
   const notes = useStore((s) => s.notes);
+  const lastBackupAt = useStore((s) => s.lastBackupAt);
+  const markBackedUp = useStore((s) => s.markBackedUp);
 
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
   const [confirmReset, setConfirmReset] = useState(false);
@@ -97,6 +99,7 @@ export function Settings() {
     a.download = `echofluent-backup-${new Date().toISOString().slice(0, 10)}.json`;
     a.click();
     URL.revokeObjectURL(url);
+    markBackedUp();
   };
 
   const importData = (file: File) => {
@@ -365,6 +368,26 @@ export function Settings() {
           desc="Toàn bộ tiến độ nằm trong trình duyệt này. Xoá dữ liệu trình duyệt là mất — nên sao lưu định kỳ."
         />
         <Card className="space-y-3">
+          <div className="rounded-xl border border-line/70 bg-raised/40 p-3.5 text-xs leading-relaxed text-muted">
+            <strong className="text-ink">Tiến độ được lưu ở đâu:</strong> trong bộ nhớ của
+            <em> chính trình duyệt này, trên chính tên miền này</em>. Nghĩa là điện thoại và máy
+            tính là hai kho riêng, bản trên mạng và bản localhost cũng là hai kho riêng — chúng
+            không tự đồng bộ với nhau.
+            <br />
+            <br />
+            Muốn chuyển sang máy khác: tải file sao lưu ở đây, rồi mở app trên máy kia và bấm
+            “Khôi phục từ file”.
+            {lastBackupAt && (
+              <>
+                <br />
+                <br />
+                <span className="text-mint">
+                  Lần sao lưu gần nhất: {new Date(lastBackupAt).toLocaleDateString('vi-VN')}
+                </span>
+              </>
+            )}
+          </div>
+
           <div className="flex flex-wrap gap-2">
             <button type="button" onClick={exportData} className="btn-ghost flex-1">
               <Download size={15} /> Tải file sao lưu
