@@ -1,0 +1,15 @@
+{
+  "name": "echofluent-sync",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Máy chủ đồng bộ tiến độ EchoFluent giữa các thiết bị",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "check": "wrangler deploy --dry-run",
+    "logs": "wrangler tail"
+  },
+  "devDependencies": {
+    "wrangler": "^4.0.0"
+  }
+}

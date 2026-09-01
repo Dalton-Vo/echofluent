@@ -1,0 +1,13 @@
+node_modules
+dist
+dist-ssr
+.DS_Store
+*.local
+.vite
+*.log
+
+# sản phẩm phụ của trình biên dịch
+*.tsbuildinfo
+
+# cấu hình riêng của máy, không liên quan tới app
+.claude/

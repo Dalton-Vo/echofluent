@@ -3,6 +3,7 @@ import { persist } from 'zustand/middleware';
 import type { DayLog, Grade, Settings, SrsCard, Totals } from '@/types';
 import { gradeCard, isMastered, newCard } from '@/lib/srs';
 import { todayKey, daysBetween, weekKey } from '@/lib/utils';
+import type { PersistedState } from '@/lib/merge';
 import { ACHIEVEMENTS } from '@/data/gamify';
 
 /* ============================================================================
@@ -58,6 +59,13 @@ interface StoreState {
   notes: Record<string, string>;
   /** Lần cuối tải file sao lưu (timestamp ms). Dùng để nhắc khi đã lâu không sao lưu. */
   lastBackupAt: number | null;
+  /**
+   * Cấu hình đồng bộ giữa các thiết bị. `secret` là mật khẩu do người dùng tự
+   * đặt khi deploy Worker — nó chỉ nằm trong trình duyệt của chính họ, không
+   * bao giờ nằm trong mã nguồn hay bản build.
+   */
+  sync: { url: string; secret: string };
+  lastSyncAt: number | null;
   onboarded: boolean;
 
   /* actions */
@@ -68,6 +76,9 @@ interface StoreState {
   clearWeak: (id: string) => void;
   setNote: (id: string, text: string) => void;
   markBackedUp: () => void;
+  setSync: (patch: Partial<{ url: string; secret: string }>) => void;
+  /** Thay toàn bộ tiến độ bằng bản đã trộn từ máy chủ đồng bộ */
+  hydrate: (next: PersistedState) => void;
   finishScenario: (id: string, score: number) => void;
   setSettings: (patch: Partial<Settings>) => void;
   dismissAchievements: () => void;
@@ -124,6 +135,8 @@ export const useStore = create<StoreState>()(
       weakIds: {},
       notes: {},
       lastBackupAt: null,
+      sync: { url: '', secret: '' },
+      lastSyncAt: null,
       onboarded: false,
 
       log: (d) =>
@@ -273,6 +286,29 @@ export const useStore = create<StoreState>()(
 
       markBackedUp: () => set({ lastBackupAt: Date.now() }),
 
+      setSync: (patch) => set((s) => ({ sync: { ...s.sync, ...patch } })),
+
+      hydrate: (next) =>
+        set({
+          settings: next.settings,
+          xp: next.xp,
+          streak: next.streak,
+          bestStreak: next.bestStreak,
+          lastActive: next.lastActive,
+          history: next.history,
+          totals: next.totals,
+          week: next.week,
+          srs: next.srs,
+          achievements: next.achievements,
+          scenarioDone: next.scenarioDone,
+          bestReactionMs: next.bestReactionMs,
+          weakIds: next.weakIds,
+          notes: next.notes,
+          lastBackupAt: next.lastBackupAt,
+          onboarded: next.onboarded,
+          lastSyncAt: Date.now(),
+        }),
+
       dismissAchievements: () => set({ newAchievements: [] }),
 
       completeOnboarding: () => set({ onboarded: true }),
@@ -294,6 +330,7 @@ export const useStore = create<StoreState>()(
           weakIds: {},
           notes: {},
           lastBackupAt: null,
+          lastSyncAt: null,
           onboarded: false,
           settings: { ...DEFAULT_SETTINGS, ...get().settings, name: get().settings.name },
         }),

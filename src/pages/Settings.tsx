@@ -10,6 +10,7 @@ import {
   FileDown,
 } from 'lucide-react';
 import { Card, Segmented, SectionHeader, Toggle, Chip } from '@/components/ui/primitives';
+import { SyncSection } from '@/components/settings/SyncSection';
 import { useStore } from '@/store/useStore';
 import { getEnglishVoices, onVoicesReady, speak } from '@/lib/speech';
 import { CHUNK_BY_ID } from '@/data/chunks';
@@ -92,7 +93,19 @@ export function Settings() {
 
   const exportData = () => {
     const raw = localStorage.getItem('echofluent-v1') ?? '{}';
-    const blob = new Blob([raw], { type: 'application/json' });
+
+    // Bỏ thông tin đăng nhập đồng bộ ra khỏi file sao lưu. File này người ta hay
+    // gửi qua Zalo, lưu Drive, đính kèm email — mật khẩu máy chủ không được đi theo.
+    let cleaned = raw;
+    try {
+      const parsed = JSON.parse(raw);
+      if (parsed?.state?.sync) parsed.state.sync = { url: '', secret: '' };
+      cleaned = JSON.stringify(parsed);
+    } catch {
+      /* không đọc được thì xuất nguyên trạng còn hơn không xuất được */
+    }
+
+    const blob = new Blob([cleaned], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -328,6 +341,8 @@ export function Settings() {
         </Card>
       </section>
 
+      <SyncSection />
+
       {/* ------------------------- xuất thẻ Anki ------------------------- */}
       <section>
         <SectionHeader
@@ -376,7 +391,10 @@ export function Settings() {
             <br />
             <br />
             Muốn chuyển sang máy khác: tải file sao lưu ở đây, rồi mở app trên máy kia và bấm
-            “Khôi phục từ file”.
+            “Khôi phục từ file”. Hoặc bật đồng bộ ở trên để khỏi phải làm tay.
+            <br />
+            File sao lưu <strong className="text-ink">không chứa</strong> mật khẩu đồng bộ, nên gửi
+            qua chat hay lưu Drive đều an toàn.
             {lastBackupAt && (
               <>
                 <br />

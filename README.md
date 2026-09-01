@@ -47,9 +47,9 @@ npm run dev
 
 Mở <http://localhost:5180>.
 
-> ⚠️ Tiến độ lưu trong `localStorage` của **từng trình duyệt và từng tên miền**. Bản
-> localhost và bản trên mạng là hai kho riêng biệt, không tự đồng bộ. Muốn chuyển thì
-> dùng **Cài đặt → Dữ liệu → Tải file sao lưu** rồi khôi phục ở bên kia.
+> ⚠️ Tiến độ lưu trong `localStorage` của **từng trình duyệt và từng tên miền**, nên bản
+> localhost và bản trên mạng là hai kho riêng. Trỏ cả hai vào cùng một máy chủ đồng bộ
+> thì chúng gặp nhau; không thì dùng **Cài đặt → Dữ liệu → Tải file sao lưu**.
 
 ### Kiểm tra chất lượng
 
@@ -57,7 +57,7 @@ Mở <http://localhost:5180>.
 npm run check
 ```
 
-Chạy một lượt: kiểm tra kiểu dữ liệu → 119 test → build. Workflow deploy cũng chạy đúng
+Chạy một lượt: kiểm tra kiểu dữ liệu → 150 test → build. Workflow deploy cũng chạy đúng
 bộ này trước khi đẩy lên, nên nội dung sai thì không lên được mạng.
 
 ---
@@ -114,8 +114,8 @@ sống và xoay xở bằng tiếng Anh:
 - **147 mẹo nhớ** — mỗi cụm một cái móc để bám: nghĩa đen, lỗi hay mắc, cụm dễ nhầm
 - **14 huy hiệu** và nhiệm vụ tuần đổi mới mỗi thứ Hai
 
-Toàn bộ nội dung được **119 test canh giữ**, trong đó có những phép kiểm tra chất lượng
-thật sự chứ không chỉ kiểm tra cú pháp:
+Toàn bộ dự án có **150 test**. Riêng phần nội dung có 41 phép kiểm tra chất lượng thật
+sự, chứ không chỉ kiểm tra cú pháp:
 
 - câu ví dụ phải thật sự chứa cụm đang dạy
 - câu mẫu phải tự chấm được điểm cao — nếu không thì người học không bao giờ đạt nổi
@@ -134,8 +134,10 @@ ràng — thêm một object là xong.
 - **Tailwind CSS** với biến CSS → đổi sáng/tối không cần viết lại style
 - **Zustand + persist** — toàn bộ tiến độ nằm trong `localStorage`
 - **Web Speech API** — phát âm và nhận diện giọng nói *ngay trong trình duyệt*.
-  Không server, không API key, không tốn tiền, không gửi giọng bạn đi đâu.
-- **Không backend.** Không tài khoản. Không tracking.
+  Không API key, không tốn tiền, không gửi giọng bạn đi đâu.
+- **Cloudflare Worker + KV** — chỉ dùng khi bạn bật đồng bộ đa thiết bị, và chỉ để giữ
+  đúng một cục JSON tiến độ. Không bật thì app chạy hoàn toàn ngoại tuyến.
+- Không tài khoản. Không tracking.
 
 ### Yêu cầu trình duyệt
 
@@ -167,6 +169,8 @@ src/
 │   ├── speech.ts       bọc Web Speech API (đọc + nghe)
 │   ├── match.ts        chấm điểm câu nói (cố tình dễ tính)
 │   ├── srs.ts          lặp lại ngắt quãng kiểu SM-2 rút gọn
+│   ├── merge.ts        trộn tiến độ giữa hai thiết bị (phần dễ mất dữ liệu nhất)
+│   ├── sync.ts         kéo về → trộn → đẩy lên
 │   └── utils.ts
 ├── store/useStore.ts   toàn bộ tiến độ + localStorage
 ├── hooks/useSpeech.ts  hook cho TTS, micro, đồng hồ đếm ngược
@@ -175,6 +179,22 @@ src/
 ```
 
 ---
+
+## Máy chủ đồng bộ
+
+Nằm trong [`worker/`](worker/) — một Cloudflare Worker khoảng 150 dòng, nhiệm vụ duy nhất
+là giữ một cục JSON và cho đọc/ghi bằng mật khẩu. Việc trộn dữ liệu cố ý đặt hết ở phía
+trình duyệt để máy chủ không có gì hỏng được.
+
+| Endpoint | Việc |
+|---|---|
+| `GET /health` | kiểm tra máy chủ sống, không cần mật khẩu |
+| `GET /state` | lấy tiến độ đang lưu |
+| `PUT /state` | ghi đè tiến độ |
+| `DELETE /state` | xoá sạch |
+
+Chạy thử ở máy: `cd worker && npx wrangler dev` (tạo file `.dev.vars` với
+`SYNC_SECRET=...` trước; file này đã được gitignore).
 
 ## Deploy
 
@@ -196,12 +216,40 @@ Nhưng nó lưu trong `localStorage`, nên có ba giới hạn thật:
 | Tình huống | Kết quả |
 |---|---|
 | Đóng tab, tắt máy, mở lại | ✅ còn nguyên |
-| Điện thoại và máy tính | ⚠️ hai kho **riêng biệt**, không tự đồng bộ |
-| Bản localhost và bản trên mạng | ⚠️ cũng là hai kho riêng |
+| Điện thoại và máy tính | ✅ tự đồng bộ, nếu bạn bật (xem bên dưới) |
+| Bản localhost và bản trên mạng | ⚠️ hai kho riêng, trừ khi trỏ cùng một máy chủ đồng bộ |
 | Xoá dữ liệu duyệt web / dùng ẩn danh | ❌ mất sạch |
 | Safari trên iPhone, nghỉ hơn 7 ngày | ❌ iOS tự dọn dữ liệu của web thường |
 
-**Hai việc nên làm:**
+### Đồng bộ giữa điện thoại và máy tính
+
+Bật rồi thì học trên điện thoại, mở laptop là thấy đủ — không phải chép file qua lại.
+
+Cần dựng một máy chủ nhỏ trên Cloudflare, **làm một lần**, miễn phí. Trong thư mục
+[`worker/`](worker/):
+
+```bash
+npx wrangler login && npx wrangler deploy && npx wrangler secret put SYNC_SECRET
+```
+
+Lệnh `deploy` in ra địa chỉ dạng `https://echofluent-sync.<tên-bạn>.workers.dev`, còn
+`secret put` sẽ hỏi mật khẩu — gõ một chuỗi bạn tự nghĩ. Điền cả hai vào **Cài đặt →
+Đồng bộ giữa các thiết bị**, bấm *Đồng bộ ngay*. Trên máy thứ hai thì bấm *Sao chép link
+cài đặt* ở máy thứ nhất rồi mở link đó — app tự điền.
+
+Vài điểm đáng biết:
+
+- **Không phải ghi đè, mà là trộn.** Học trên điện thoại buổi sáng rồi mở laptop buổi
+  tối, laptop sẽ không xoá mất buổi sáng: app trộn theo từng trường (số liệu lấy giá trị
+  lớn hơn, thẻ ôn giữ bản đã học sâu hơn, ghi chú hợp lại). Có 24 test riêng canh phần
+  này, gồm cả kiểm tra trộn nhiều lần không làm dữ liệu trôi đi.
+- **Tự chạy** lúc mở app và lúc rời app. Nút bấm tay chỉ để bạn yên tâm.
+- **Mật khẩu chỉ nằm trong trình duyệt bạn**, không có trong mã nguồn, không lên GitHub,
+  không nằm trong file sao lưu.
+- Cloudflare cho 100.000 lượt gọi mỗi ngày ở gói miễn phí. Dùng cá nhân thì không bao giờ
+  chạm tới.
+
+**Hai việc nên làm dù có bật đồng bộ hay không:**
 
 1. **Thêm vào màn hình chính** (iPhone: nút Chia sẻ → *Thêm vào MH chính*; Android Chrome:
    menu → *Cài đặt ứng dụng*). App mở toàn màn hình như app thật, **và quan trọng hơn**:

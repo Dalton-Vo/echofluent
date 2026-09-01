@@ -4,6 +4,7 @@ import { Shell } from '@/components/layout/Shell';
 import { PinGate } from '@/components/PinGate';
 import { AchievementToast } from '@/components/shared/AchievementToast';
 import { useStore } from '@/store/useStore';
+import { useAutoSync } from '@/hooks/useAutoSync';
 import { Dashboard } from '@/pages/Dashboard';
 import { ReflexDrill } from '@/pages/ReflexDrill';
 import { ListeningGym } from '@/pages/ListeningGym';
@@ -23,6 +24,9 @@ export default function App() {
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
   }, [theme]);
+
+  // Kéo về lúc mở app, đẩy lên lúc rời app
+  useAutoSync();
 
   return (
     <PinGate>
