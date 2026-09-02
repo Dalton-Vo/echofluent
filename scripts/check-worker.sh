@@ -150,6 +150,31 @@ else
   echo "     máy chủ trả về: $(echo "$resp" | head -c 200)"
 fi
 
+# --- 7. Id KV đã được commit chưa -------------------------------------------
+echo
+echo "7. Cấu hình kho lưu đã được ghi lại vào git chưa"
+CFG="$(dirname "$0")/../worker/wrangler.jsonc"
+if [ -f "$CFG" ]; then
+  if grep -qE '"id"[[:space:]]*:' "$CFG"; then
+    if git -C "$(dirname "$0")/.." diff --quiet -- worker/wrangler.jsonc 2>/dev/null; then
+      ok "Id KV đã nằm trong git"
+    else
+      bad "Id KV có trong file nhưng CHƯA commit"
+      echo "     Không commit thì lần deploy sau từ máy khác sẽ tạo kho MỚI,"
+      echo "     và toàn bộ tiến độ cũ biến mất không báo lỗi."
+      echo "     Sửa ngay:"
+      echo "       git add worker/wrangler.jsonc"
+      echo "       git commit -m 'Ghi lai id KV namespace' && git push"
+    fi
+  else
+    bad "Chưa thấy id KV trong worker/wrangler.jsonc"
+    echo "     Nếu vừa deploy xong mà file không đổi, kiểm tra lại bằng:"
+    echo "       npx wrangler kv namespace list"
+  fi
+else
+  echo "  ⏭  Không tìm thấy worker/wrangler.jsonc (chạy script ngoài repo?)"
+fi
+
 # --- kết luận ---------------------------------------------------------------
 echo
 echo "────────────────────────────────"

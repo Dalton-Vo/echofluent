@@ -65,6 +65,17 @@ printf '%s' "$SECRET" | npx wrangler secret put SYNC_SECRET
 echo "Mật khẩu của bạn: $SECRET"
 ```
 
+**Quên commit id của KV namespace.** File `worker/wrangler.jsonc` khai kho lưu
+mà không có `id`. Lần deploy đầu, wrangler tự tạo namespace rồi tự ghi id vào
+file — trên máy bạn. Không commit thay đổi đó thì lần deploy sau từ máy khác
+sẽ tạo **namespace thứ hai**, và toàn bộ tiến độ cũ biến mất không một lời báo
+lỗi: app chỉ thấy một kho trống. Sau lần deploy đầu, luôn chạy:
+
+```bash
+git diff worker/wrangler.jsonc     # có thêm dòng "id": "..." không?
+git add worker/wrangler.jsonc && git commit -m "Ghi lại id KV namespace"
+```
+
 **Gõ thiếu chữ trong tên biến.** Đặt thành `SYNC_SECRE` thì lệnh vẫn báo thành
 công, Worker vẫn deploy được, nhưng đồng bộ lặng lẽ không chạy — và bạn chỉ
 phát hiện ra vào lúc đổi máy, tức là lúc đã mất tiến độ. Kiểm tra lại bằng:
