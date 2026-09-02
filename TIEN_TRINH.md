@@ -3,7 +3,7 @@
 Ghi lại những gì đã làm, vì sao làm vậy, và còn gì chưa xong. Đọc file này
 trước khi làm tiếp để khỏi phải dò lại từ đầu.
 
-Cập nhật lần cuối: 02/09/2026
+Cập nhật lần cuối: 02/09/2026 (vòng sửa thứ hai)
 
 ---
 
@@ -240,6 +240,91 @@ mọi đường dẫn code gọi tới (12 kịch bản + 10 bộ shadowing + he
 Khoá Google này còn gọi được cả model sinh ảnh (`gemini-3-pro-image`,
 `nano-banana-pro-preview`), nên muốn thay ảnh mới thì không cần qua ChatGPT nữa
 — sinh thẳng bằng chính khoá đang dùng. Chưa làm vì ảnh hiện tại vẫn tốt.
+
+---
+
+## 10. Vòng sửa thứ hai (sau khi thử trên máy thật)
+
+### 10.1 Vạch mức âm chết — lỗi của chính bản sửa trước
+
+Triệu chứng: nút micro đỏ (đang nghe), nhưng vạch mức âm đứng im và app
+hiện "Chưa nghe thấy gì" dù micro vẫn thu bình thường.
+
+Nguyên nhân: `new AudioContext()` sinh ra ở trạng thái **suspended** khi không
+được tạo ngay trong một cú bấm của người dùng. Khi bị treo như vậy,
+`getFloatTimeDomainData()` trả về **toàn số 0, mãi mãi, không hề báo lỗi**.
+Thiếu đúng một lời gọi `ctx.resume()`.
+
+Đường tự bật micro chắc chắn dính lỗi này, vì đúng định nghĩa nó không có cú
+bấm nào đi kèm. Đã thêm `resume()` lúc tạo và kiểm tra lại mỗi lần đọc mức âm
+(trình duyệt có thể treo lại context khi cửa sổ mất tiêu điểm).
+
+### 10.2 Brave không hiện chữ
+
+Brave gỡ bỏ khoá API của Google mà Web Speech dựa vào. Hậu quả:
+`webkitSpeechRecognition` **vẫn tồn tại**, `start()` **vẫn chạy**, không ném
+lỗi gì — chỉ là không bao giờ trả về chữ rồi tự kết thúc.
+
+Nên phép thử `'webkitSpeechRecognition' in window` báo "có hỗ trợ" và app đi
+thẳng vào ngõ cụt. Tệ hơn: đường dự phòng nhờ AI chép chữ lại có điều kiện
+`!mic.sttSupported`, mà cờ đó đang **bật** ở Brave → đường cứu không bao giờ
+chạy. Người dùng Brave nói cả buổi vẫn nhận về "chưa nói được".
+
+Sửa: bỏ hẳn điều kiện theo cờ hỗ trợ, xét theo **kết quả thật** — không có chữ
+mà có bản ghi âm thì gọi AI. Cách này cứu luôn Firefox và cả trường hợp mạng
+công ty chặn dịch vụ của Google. Thêm `detectQuirks()` để nói thẳng với người
+dùng chuyện gì đang xảy ra thay vì để họ ngồi đoán.
+
+### 10.3 Bảng kiểm tra micro
+
+Mục mới trong Cài đặt, trả lời đúng một câu: "micro của tôi có chạy không?"
+Tách bạch từng khâu — thiết bị nào đang thu, có tín hiệu vào không, thu thử rồi
+nghe lại có ra giọng mình không.
+
+Cần khi **đeo tai nghe**: macOS hay tự chuyển đầu vào sang micro của tai nghe,
+và không ít tai nghe Bluetooth khi đang ở chế độ nghe nhạc chất lượng cao thì
+micro không hoạt động. Có ô chọn thiết bị thu, lưu vào `settings.micDeviceId`,
+mở bằng `deviceId: { exact }` để trình duyệt không lặng lẽ dùng thiết bị khác.
+
+### 10.4 Giọng đọc AI
+
+Giọng của hệ điều hành đọc đúng chữ nhưng sai nhạc: nhịp đều đều, không có chỗ
+nhấn chỗ lướt. Nhại theo giọng đó thì nhại luôn cả cái đều đều — hỏng đúng thứ
+bài shadowing sinh ra để rèn.
+
+Dùng `gemini-2.5-flash-preview-tts`, bốn giọng chọn sẵn (Kore / Puck / Charon /
+Aoede). Ba điều bắt buộc, không phải để tối ưu mà để dùng được thật:
+
+1. **Đệm bền vào IndexedDB.** Nội dung học cố định, đọc đi đọc lại hàng trăm
+   lần. Sinh lại mỗi lần là đốt hạn mức vô ích.
+2. **Tự lùi về giọng máy.** Gói miễn phí trả 429 rất nhanh (thử 5 giọng liên
+   tiếp là dính). App im bặt còn tệ hơn giọng khô.
+3. **Không chặn giao diện.** Câu hỏi hiện ra ngay, giọng tới sau.
+
+Gemini trả PCM trần (`audio/L16;rate=24000`) — thẻ `<audio>` không phát thẳng
+được, phải bọc 44 byte header WAV.
+
+### 10.5 Soát nội dung theo hướng thông dụng
+
+Nhờ chính Gemini soi lại 147 cụm. Kết quả: **chỉ 5 cụm bị gắn cờ**, phần còn
+lại được đánh giá là thực tế và sát công việc.
+
+Xem xét kỹ thì chỉ **3 trong 5** đáng sửa:
+
+| Cũ | Mới | Vì sao |
+|---|---|---|
+| `I'd argue that…` | `I think the problem is…` | Nhóm nêu ý kiến có 9 cụm mà thiếu đúng cụm thông dụng nhất |
+| `Let's agree to disagree.` | `Let's come back to this later.` | Câu cứu nguy khi họp bế tắc, lại không mất lòng ai |
+| `There's been a mix-up with my order.` | `I think my order is wrong.` | "mix-up" là từ thừa, người bản xứ nói thẳng hơn |
+
+**Bỏ qua 2 đề xuất còn lại:**
+- `I'd push back on that a little` — AI gọi là "corporate jargon", nhưng với
+  dân lập trình thì "push back" là từ hằng ngày, đúng register người học cần.
+- `As far as I'm concerned` → `In my opinion` — đổi một cụm trang trọng lấy một
+  cụm sách vở khác, trong khi nhóm đó đã có 8 cách nói rồi. Không được gì.
+
+Đây là lý do không nên áp dụng thẳng đầu ra của AI: nó không biết người học là
+lập trình viên, nên đánh giá register sai ở đúng chỗ quan trọng.
 
 ---
 
