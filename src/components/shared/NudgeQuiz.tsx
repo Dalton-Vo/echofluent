@@ -190,6 +190,9 @@ export function NudgeQuiz() {
               state={mic.state}
               level={mic.level}
               resumed={mic.resumed}
+            sttSilent={mic.sttSilent}
+            browserName={mic.quirks.name}
+            aiReady={coach.ready}
               size="md"
               disabled={busy}
               onStart={() => void mic.start()}

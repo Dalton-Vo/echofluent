@@ -222,9 +222,15 @@ export function ReflexDrill() {
 
       let spoken = skipped ? '' : text.trim();
 
-      /* Trình duyệt không có nhận diện giọng nói (Firefox…) nhưng vẫn ghi âm
-       * được → nhờ AI chép lại, để bài vẫn được chấm như thường. */
-      if (!spoken && !skipped && rec && coach.ready && !mic.sttSupported) {
+      /* Không có chữ nhưng có bản ghi âm → nhờ AI chép lại.
+       *
+       * Cố tình KHÔNG xét `mic.sttSupported` ở đây. Brave có sẵn
+       * `webkitSpeechRecognition` nên cờ đó bật, nhưng nó đã gỡ khoá API của
+       * Google phía sau — API chạy, không ném lỗi, và không bao giờ trả chữ.
+       * Xét theo cờ hỗ trợ thì đường cứu này không bao giờ chạy, và người dùng
+       * Brave nói cả buổi vẫn nhận về "chưa nói được". Xét theo KẾT QUẢ THẬT
+       * thì cứu được cả Brave, cả Firefox, cả lúc mạng chặn dịch vụ của Google. */
+      if (!spoken && !skipped && rec && coach.ready) {
         spoken = (await coach.transcribe(rec)).trim();
       }
 
@@ -383,6 +389,9 @@ export function ReflexDrill() {
             state={mic.state}
             level={mic.level}
             resumed={mic.resumed}
+            sttSilent={mic.sttSilent}
+            browserName={mic.quirks.name}
+            aiReady={coach.ready}
             disabled={grading}
             onStart={() => void mic.start()}
             onStop={() => void finishAnswer(false)}

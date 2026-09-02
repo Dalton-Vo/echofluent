@@ -16,6 +16,7 @@ const SETTINGS: Settings = {
   autoPlay: true,
   strictTimer: true,
   useMic: true,
+  micDeviceId: '',
   theme: 'dark',
   sound: true,
 };

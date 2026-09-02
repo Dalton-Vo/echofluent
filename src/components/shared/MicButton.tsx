@@ -20,6 +20,9 @@ export function MicButton({
   size = 'lg',
   hint,
   resumed,
+  sttSilent,
+  browserName,
+  aiReady,
 }: {
   state: MicState;
   /** Mức âm thanh vào, 0 → 1 */
@@ -31,6 +34,11 @@ export function MicButton({
   hint?: string;
   /** Trình duyệt vừa tự ngắt và app đã nối lại — trấn an người dùng */
   resumed?: boolean;
+  /** Nhận diện chạy nhưng không ra chữ — Brave hay bị */
+  sttSilent?: boolean;
+  browserName?: string;
+  /** Đã gắn khoá AI chưa — quyết định lời khuyên đưa ra */
+  aiReady?: boolean;
 }) {
   const listening = state === 'listening';
   const starting = state === 'starting';
@@ -128,9 +136,23 @@ export function MicButton({
 
       {hint && !starting && <span className="text-xs text-faint">{hint}</span>}
 
-      {resumed && listening && (
+      {resumed && listening && !sttSilent && (
         <span className="text-[11px] text-faint">
           Trình duyệt tự ngắt vì im lặng — app đã nối lại, cứ nói tiếp.
+        </span>
+      )}
+
+      {/* Nhận diện chạy mà câm: nói thẳng nguyên nhân, đừng để người dùng
+          ngồi nói to dần lên rồi tưởng micro của mình hỏng. */}
+      {sttSilent && listening && (
+        <span className="max-w-xs text-center text-[11px] leading-relaxed text-amber">
+          {browserName === 'Brave'
+            ? aiReady
+              ? 'Brave chặn nhận diện giọng nói của Google, nên chữ không hiện lên được. Cứ nói xong rồi bấm dừng — AI sẽ nghe lại bản ghi âm và chấm bình thường.'
+              : 'Brave chặn nhận diện giọng nói của Google nên không hiện chữ được. Vào Cài đặt gắn khoá AI để chấm bằng bản ghi âm, hoặc mở app bằng Chrome.'
+            : aiReady
+              ? 'Trình duyệt không trả về chữ. Cứ nói xong rồi bấm dừng — AI sẽ nghe lại bản ghi âm.'
+              : 'Trình duyệt không trả về chữ. Thử dùng Chrome, hoặc gắn khoá AI trong Cài đặt để chấm bằng bản ghi âm.'}
         </span>
       )}
 

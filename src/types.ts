@@ -284,6 +284,8 @@ export interface Settings {
   /** Bật đồng hồ đếm ngược ép phản xạ */
   strictTimer: boolean;
   useMic: boolean;
+  /** Thiết bị thu người dùng chọn. Rỗng = để hệ điều hành tự quyết. */
+  micDeviceId: string;
   theme: 'dark' | 'light';
   sound: boolean;
 }

@@ -272,6 +272,9 @@ function PackPlayer({ pack, onExit }: { pack: ShadowPack; onExit: () => void }) 
           size="md"
           level={mic.level}
           resumed={mic.resumed}
+            sttSilent={mic.sttSilent}
+            browserName={mic.quirks.name}
+            aiReady={false}
           onStart={async () => {
             setRecording(null);
             coach.reset();

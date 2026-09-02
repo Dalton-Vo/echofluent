@@ -50,16 +50,42 @@ export async function queryMicPermission(): Promise<MicPermission> {
 
 let sharedStream: MediaStream | null = null;
 let openPromise: Promise<MediaStream> | null = null;
+let openedDevice: string | undefined;
+
+export interface MicDevice {
+  id: string;
+  label: string;
+}
+
+/**
+ * Liệt kê các thiết bị thu có trên máy.
+ *
+ * Nhãn thiết bị chỉ hiện ra SAU khi quyền micro đã được cấp — trước đó trình
+ * duyệt trả về chuỗi rỗng để tránh lộ danh tính máy. Nên hàm này chỉ dùng được
+ * sau khi đã gọi openMic() ít nhất một lần.
+ */
+export async function listMicrophones(): Promise<MicDevice[]> {
+  if (!isMicApiSupported() || !navigator.mediaDevices.enumerateDevices) return [];
+  try {
+    const all = await navigator.mediaDevices.enumerateDevices();
+    return all
+      .filter((d) => d.kind === 'audioinput')
+      .map((d, i) => ({ id: d.deviceId, label: d.label || `Micro ${i + 1}` }));
+  } catch {
+    return [];
+  }
+}
 
 /**
  * Mở micro và giữ lại dùng chung. Giữ luồng thay vì mở/đóng liên tục vì mỗi
  * lần `getUserMedia` mất 100–300ms — đủ để nuốt mất mấy chữ đầu của câu, mà
  * đúng mấy chữ đầu mới là thứ bài luyện phản xạ cần đo.
  */
-export async function openMic(): Promise<MediaStream> {
-  if (sharedStream && sharedStream.getAudioTracks().some((t) => t.readyState === 'live')) {
-    return sharedStream;
-  }
+export async function openMic(deviceId?: string): Promise<MediaStream> {
+  const live = sharedStream?.getAudioTracks().some((t) => t.readyState === 'live');
+  // Đổi thiết bị thì phải mở lại — luồng cũ vẫn gắn với micro cũ.
+  if (live && openedDevice === deviceId) return sharedStream as MediaStream;
+  if (live && openedDevice !== deviceId) closeMic();
   if (openPromise) return openPromise;
 
   openPromise = navigator.mediaDevices
@@ -68,10 +94,14 @@ export async function openMic(): Promise<MediaStream> {
         echoCancellation: true,
         noiseSuppression: true,
         autoGainControl: true,
+        // `exact` chứ không phải giá trị gợi ý: chọn nhầm thiết bị mà trình
+        // duyệt lặng lẽ dùng cái khác thì người dùng chỉnh mãi không thấy đổi.
+        ...(deviceId ? { deviceId: { exact: deviceId } } : {}),
       },
     })
     .then((s) => {
       sharedStream = s;
+      openedDevice = deviceId;
       openPromise = null;
       return s;
     })
@@ -83,10 +113,16 @@ export async function openMic(): Promise<MediaStream> {
   return openPromise;
 }
 
+/** Tên thiết bị đang thu — hiện lên để người dùng biết mình đang nói vào đâu */
+export function activeMicLabel(): string {
+  return sharedStream?.getAudioTracks()[0]?.label ?? '';
+}
+
 /** Tắt micro, trả đèn báo thu âm của trình duyệt về trạng thái tắt */
 export function closeMic(): void {
   sharedStream?.getTracks().forEach((t) => t.stop());
   sharedStream = null;
+  openedDevice = undefined;
 }
 
 /** Dịch lỗi của getUserMedia sang trạng thái app hiểu được */
@@ -112,6 +148,16 @@ export interface LevelMeter {
 export function createLevelMeter(stream: MediaStream): LevelMeter {
   const Ctx = window.AudioContext ?? (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
   const ctx = new Ctx();
+
+  /* AudioContext sinh ra ở trạng thái 'suspended' khi không được tạo ngay
+   * trong một cú bấm của người dùng — và khi bị treo như vậy thì
+   * getFloatTimeDomainData trả về TOÀN SỐ 0, mãi mãi, không hề báo lỗi.
+   * Kết quả: vạch mức âm chết cứng đúng lúc micro vẫn đang thu bình thường,
+   * app lại còn hiện "chưa nghe thấy gì" khiến người dùng tưởng micro hỏng.
+   * Không có dòng resume() này thì cả phần đo âm lượng vô dụng ở đường tự
+   * bật micro (lúc đó chắc chắn không có cú bấm nào đi kèm). */
+  void ctx.resume().catch(() => {});
+
   const src = ctx.createMediaStreamSource(stream);
   const analyser = ctx.createAnalyser();
   analyser.fftSize = 1024;
@@ -125,6 +171,8 @@ export function createLevelMeter(stream: MediaStream): LevelMeter {
   return {
     level() {
       if (stopped) return 0;
+      // Trình duyệt có thể treo lại context khi cửa sổ mất tiêu điểm.
+      if (ctx.state === 'suspended') void ctx.resume().catch(() => {});
       analyser.getFloatTimeDomainData(buf);
       let sum = 0;
       for (let i = 0; i < buf.length; i += 1) sum += buf[i] * buf[i];
@@ -315,4 +363,38 @@ export function blobToBase64(blob: Blob): Promise<string> {
     };
     fr.readAsDataURL(blob);
   });
+}
+
+
+/* ------------------------- nhận diện trình duyệt ------------------------- */
+
+export interface BrowserQuirks {
+  isBrave: boolean;
+  /** Nhận diện giọng nói của trình duyệt gần như chắc chắn không chạy */
+  sttLikelyBlocked: boolean;
+  name: string;
+}
+
+/**
+ * Dò những trình duyệt có `webkitSpeechRecognition` nhưng dùng không được.
+ *
+ * Brave là ca đáng nói nhất: nó gỡ bỏ khoá API của Google mà Web Speech dựa
+ * vào, nên đối tượng đó vẫn tồn tại, `start()` vẫn chạy, không ném lỗi gì —
+ * chỉ là chẳng bao giờ trả về chữ, rồi tự kết thúc. Kiểm tra kiểu
+ * `'webkitSpeechRecognition' in window` sẽ báo "có hỗ trợ" và app đi tiếp một
+ * cách vui vẻ vào ngõ cụt. Phải dò riêng mới biết đường chuyển sang cho AI
+ * chép chữ từ bản ghi âm.
+ */
+export function detectQuirks(): BrowserQuirks {
+  const nav = navigator as Navigator & { brave?: { isBrave?: () => Promise<boolean> } };
+  const ua = navigator.userAgent;
+
+  // Brave có `navigator.brave`, nhưng hàm kiểm tra lại bất đồng bộ nên ở đây
+  // chỉ xét sự tồn tại của đối tượng — thế là đủ và không phải chờ.
+  const isBrave = typeof nav.brave === 'object' && nav.brave !== null;
+
+  const isFirefox = ua.includes('Firefox');
+  const name = isBrave ? 'Brave' : isFirefox ? 'Firefox' : ua.includes('Edg') ? 'Edge' : ua.includes('Chrome') ? 'Chrome' : ua.includes('Safari') ? 'Safari' : 'trình duyệt này';
+
+  return { isBrave, sttLikelyBlocked: isBrave || isFirefox, name };
 }

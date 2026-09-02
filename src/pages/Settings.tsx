@@ -13,6 +13,7 @@ import { Card, Segmented, SectionHeader, Toggle, Chip } from '@/components/ui/pr
 import { SyncSection } from '@/components/settings/SyncSection';
 import { AiSection } from '@/components/settings/AiSection';
 import { NudgeSection } from '@/components/settings/NudgeSection';
+import { MicCheckSection } from '@/components/settings/MicCheckSection';
 import { useStore } from '@/store/useStore';
 import { getEnglishVoices, onVoicesReady, speak } from '@/lib/speech';
 import { CHUNK_BY_ID } from '@/data/chunks';
@@ -342,6 +343,8 @@ export function Settings() {
           />
         </Card>
       </section>
+
+      <MicCheckSection />
 
       <NudgeSection />
 

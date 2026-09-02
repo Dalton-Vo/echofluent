@@ -72,7 +72,16 @@ interface StoreState {
    * và không bao giờ được đẩy lên repo. Ai dùng Worker thì để trống `key` và
    * điền `proxyUrl`, khi đó khoá nằm ở máy chủ, trình duyệt không giữ gì.
    */
-  ai: { key: string; proxyUrl: string; model: string; enabled: boolean };
+  ai: {
+    key: string;
+    proxyUrl: string;
+    model: string;
+    enabled: boolean;
+    /** Dùng giọng đọc của Gemini thay cho giọng có sẵn của hệ điều hành */
+    voice: boolean;
+    /** Tên giọng Gemini, ví dụ 'Kore' */
+    voiceName: string;
+  };
   /**
    * Nhắc luyện định kỳ. `nextAt` là mốc thời gian thật của lần nhắc kế tiếp,
    * lưu lại để đóng app mở lại vẫn đúng nhịp chứ không đếm lại từ đầu.
@@ -89,7 +98,16 @@ interface StoreState {
   setNote: (id: string, text: string) => void;
   markBackedUp: () => void;
   setSync: (patch: Partial<{ url: string; secret: string }>) => void;
-  setAi: (patch: Partial<{ key: string; proxyUrl: string; model: string; enabled: boolean }>) => void;
+  setAi: (
+    patch: Partial<{
+      key: string;
+      proxyUrl: string;
+      model: string;
+      enabled: boolean;
+      voice: boolean;
+      voiceName: string;
+    }>,
+  ) => void;
   setNudge: (
     patch: Partial<{ on: boolean; everyMin: number; nextAt: number | null; speak: boolean }>,
   ) => void;
@@ -113,6 +131,7 @@ const DEFAULT_SETTINGS: Settings = {
   autoPlay: true,
   strictTimer: true,
   useMic: true,
+  micDeviceId: '',
   theme: 'dark',
   sound: true,
 };
@@ -153,7 +172,14 @@ export const useStore = create<StoreState>()(
       lastBackupAt: null,
       sync: { url: '', secret: '' },
       lastSyncAt: null,
-      ai: { key: '', proxyUrl: '', model: 'gemini-3.5-flash', enabled: true },
+      ai: {
+        key: '',
+        proxyUrl: '',
+        model: 'gemini-3.5-flash',
+        enabled: true,
+        voice: false,
+        voiceName: 'Kore',
+      },
       nudge: { on: false, everyMin: 15, nextAt: null, speak: true },
       onboarded: false,
 

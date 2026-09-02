@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Sparkles,
   Eye,
@@ -8,10 +8,14 @@ import {
   LoaderCircle,
   ExternalLink,
   ShieldCheck,
+  Volume2,
+  Square,
 } from 'lucide-react';
 import { Card, SectionHeader, Toggle } from '@/components/ui/primitives';
 import { useStore } from '@/store/useStore';
 import { pingAi, isAiReady, DEFAULT_MODEL } from '@/lib/gemini';
+import { AI_VOICES, DEFAULT_AI_VOICE, clearTtsCache, ttsCacheSize } from '@/lib/tts';
+import { useSpeaker } from '@/hooks/useSpeech';
 import { cn } from '@/lib/utils';
 
 /* ============================================================================
@@ -37,6 +41,12 @@ export function AiSection() {
   const [showKey, setShowKey] = useState(false);
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<{ ok: boolean; message: string } | null>(null);
+  const [cached, setCached] = useState(0);
+  const { say, stop, speaking } = useSpeaker();
+
+  useEffect(() => {
+    void ttsCacheSize().then(setCached);
+  }, [ai.voice, ai.voiceName]);
 
   const configured = isAiReady(ai);
 
@@ -127,6 +137,78 @@ export function AiSection() {
                   </option>
                 ))}
               </select>
+            </div>
+
+            {/* ---------------- giọng đọc ---------------- */}
+            <div className="space-y-3.5 rounded-xl border border-line/70 bg-raised/30 p-4">
+              <Toggle
+                checked={ai.voice}
+                onChange={(v) => setAi({ voice: v })}
+                label="Dùng giọng đọc của Gemini"
+                hint="Giọng máy của hệ điều hành đọc đúng chữ nhưng nhịp đều đều. Nhại theo giọng đó thì nhại luôn cả cái đều đều — hỏng đúng thứ bài shadowing rèn."
+              />
+
+              {ai.voice && (
+                <>
+                  <div>
+                    <label className="label" htmlFor="ai-voice">
+                      Chọn giọng
+                    </label>
+                    <div className="flex gap-2">
+                      <select
+                        id="ai-voice"
+                        value={ai.voiceName || DEFAULT_AI_VOICE}
+                        onChange={(e) => setAi({ voiceName: e.target.value })}
+                        className="input flex-1 text-sm"
+                      >
+                        {AI_VOICES.map((v) => (
+                          <option key={v.id} value={v.id}>
+                            {v.label}
+                          </option>
+                        ))}
+                      </select>
+                      <button
+                        type="button"
+                        disabled={!configured}
+                        onClick={() =>
+                          speaking
+                            ? stop()
+                            : say("No blockers on my end, although I'm still waiting on the API key.")
+                        }
+                        className="btn-ghost px-3 disabled:opacity-40"
+                      >
+                        {speaking ? <Square size={14} /> : <Volume2 size={15} />}
+                        {speaking ? 'Dừng' : 'Nghe thử'}
+                      </button>
+                    </div>
+                  </div>
+
+                  <p className="text-xs leading-relaxed text-faint">
+                    Câu đã đọc được lưu lại trong máy nên lần sau phát ngay, không gọi mạng và
+                    không tốn hạn mức. Hiện đã lưu <b className="text-muted">{cached}</b> câu.
+                    {cached > 0 && (
+                      <>
+                        {' '}
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            await clearTtsCache();
+                            setCached(0);
+                          }}
+                          className="underline underline-offset-2 hover:text-ink"
+                        >
+                          Xoá bộ nhớ đệm
+                        </button>
+                      </>
+                    )}
+                  </p>
+
+                  <p className="rounded-lg bg-amber/10 px-3 py-2 text-xs leading-relaxed text-amber">
+                    Gói miễn phí giới hạn số lượt khá chặt. Hết lượt thì app tự quay về giọng
+                    của hệ điều hành chứ không im lặng — bạn vẫn học tiếp bình thường.
+                  </p>
+                </>
+              )}
             </div>
 
             <details className="group">

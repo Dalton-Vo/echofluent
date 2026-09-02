@@ -300,6 +300,9 @@ export function ScenarioPlayer() {
             state={mic.state}
             level={mic.level}
             resumed={mic.resumed}
+            sttSilent={mic.sttSilent}
+            browserName={mic.quirks.name}
+            aiReady={false}
             onStart={() => void mic.start()}
             onStop={() => void submit(false)}
             hint={mic.state === 'listening' ? 'Đang nghe… nói xong thì bấm' : 'Bấm rồi nói'}

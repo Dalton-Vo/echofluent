@@ -279,6 +279,9 @@ export function Review() {
               size="md"
               level={mic.level}
               resumed={mic.resumed}
+            sttSilent={mic.sttSilent}
+            browserName={mic.quirks.name}
+            aiReady={false}
               onStart={() => void mic.start()}
               onStop={async () => {
                 await mic.finish();
