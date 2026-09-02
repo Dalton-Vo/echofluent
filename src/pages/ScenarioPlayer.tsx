@@ -95,10 +95,10 @@ export function ScenarioPlayer() {
   }, [idx, scenario, stop]);
 
   const submit = useCallback(
-    (spokenRaw: string, skipped = false) => {
+    async (skipped = false) => {
       if (!turn || turn.speaker !== 'you') return;
-      mic.stop();
-      const spoken = spokenRaw.trim();
+      const { text } = await mic.finish();
+      const spoken = skipped ? '' : text.trim();
       const r =
         skipped || !spoken ? null : scoreAnswer(spoken, turn.targets ?? [], turn.text);
       setResult(r);
@@ -298,8 +298,10 @@ export function ScenarioPlayer() {
 
           <MicButton
             state={mic.state}
-            onStart={() => mic.start()}
-            onStop={() => submit(mic.transcript)}
+            level={mic.level}
+            resumed={mic.resumed}
+            onStart={() => void mic.start()}
+            onStop={() => void submit(false)}
             hint={mic.state === 'listening' ? 'Đang nghe… nói xong thì bấm' : 'Bấm rồi nói'}
           />
 
@@ -310,12 +312,12 @@ export function ScenarioPlayer() {
           )}
 
           <div className="flex flex-wrap justify-center gap-2">
-            {(!mic.supported || mic.state === 'denied') && (
-              <button type="button" className="btn-primary" onClick={() => submit('', false)}>
+            {(!mic.supported || mic.state === 'denied' || mic.state === 'nomic') && (
+              <button type="button" className="btn-primary" onClick={() => void submit(false)}>
                 <Check size={15} /> Tôi đã nói xong
               </button>
             )}
-            <button type="button" className="btn-ghost" onClick={() => submit('', true)}>
+            <button type="button" className="btn-ghost" onClick={() => void submit(true)}>
               Bí rồi, xem câu mẫu
             </button>
           </div>

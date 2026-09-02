@@ -5,6 +5,7 @@ import { SpeakButton } from '@/components/shared/SpeakButton';
 import { MemoryAid } from '@/components/shared/MemoryAid';
 import { useSpeaker } from '@/hooks/useSpeech';
 import { useStore } from '@/store/useStore';
+import { ipaOf } from '@/data/phonemes';
 import { CHUNKS } from '@/data/chunks';
 import { isMastered } from '@/lib/srs';
 import { DOMAIN_LABEL, FN_LABEL, type Domain, type FunctionTag } from '@/types';
@@ -168,6 +169,8 @@ export function ChunkLibrary() {
                   </div>
 
                   <p className="text-[17px] font-bold leading-snug text-ink">{c.en}</p>
+                  {/* Phiên âm tra từ điển CMU đóng sẵn — không cần mạng, không tốn lượt AI */}
+                  <IpaLine text={c.en} />
                   <p className="mt-0.5 text-sm text-muted">{c.vi}</p>
 
                   <div className="mt-2.5 rounded-xl border border-line/70 bg-raised/40 p-3">
@@ -263,4 +266,24 @@ function FilterPill({
       {children}
     </button>
   );
+}
+
+/* ------------------------------ phiên âm ------------------------------ */
+
+/**
+ * Dòng phiên âm IPA dưới mỗi cụm.
+ *
+ * Bỏ qua lặng lẽ những từ không có trong từ điển thay vì in dấu "?" — một cụm
+ * lấm chấm dấu hỏi trông như app hỏng, trong khi thiếu vài từ chẳng ảnh hưởng
+ * gì tới việc đọc cả cụm.
+ */
+function IpaLine({ text }: { text: string }) {
+  const ipa = text
+    .split(/\s+/)
+    .map((w) => ipaOf(w))
+    .filter(Boolean)
+    .join(' ');
+
+  if (!ipa) return null;
+  return <p className="mt-0.5 font-mono text-xs text-faint">/{ipa}/</p>;
 }

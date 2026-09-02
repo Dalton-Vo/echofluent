@@ -277,9 +277,11 @@ export function Review() {
             <MicButton
               state={mic.state}
               size="md"
-              onStart={() => mic.start()}
-              onStop={() => {
-                mic.stop();
+              level={mic.level}
+              resumed={mic.resumed}
+              onStart={() => void mic.start()}
+              onStop={async () => {
+                await mic.finish();
                 setFlipped(true);
               }}
               hint={mic.state === 'listening' ? 'Đang nghe…' : 'Nói rồi lật thẻ'}

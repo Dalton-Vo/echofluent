@@ -15,12 +15,16 @@ import {
   Mic,
   Square,
   Volume2,
+  Sparkles,
 } from 'lucide-react';
 import { Card, Chip, ProgressBar, Segmented, SectionHeader } from '@/components/ui/primitives';
 import { MicButton } from '@/components/shared/MicButton';
 import { SpeakButton } from '@/components/shared/SpeakButton';
 import { CountdownRing } from '@/components/shared/CountdownRing';
+import { PronunciationCard } from '@/components/shared/PronunciationCard';
 import { useMic, useSpeaker } from '@/hooks/useSpeech';
+import { useAiCoach } from '@/hooks/useAiCoach';
+import type { Recording } from '@/lib/audio';
 import { useStore } from '@/store/useStore';
 import { REFLEX } from '@/data/reflex';
 import { scoreAnswer, shadowAccuracy, shuffle, type MatchResult } from '@/lib/match';
@@ -59,6 +63,9 @@ interface Attempt {
   skipped: boolean;
 }
 
+/** Ngưỡng âm lượng coi là "đã bật ra tiếng" — thở hay tiếng ồn phòng nằm dưới mức này */
+const VOICE_ONSET = 0.07;
+
 export function ReflexDrill() {
   const settings = useStore((s) => s.settings);
   const log = useStore((s) => s.log);
@@ -80,6 +87,11 @@ export function ReflexDrill() {
 
   const { say, stop: stopSay } = useSpeaker();
   const mic = useMic();
+  const coach = useAiCoach();
+
+  /** Bản ghi âm của câu vừa trả lời — để dành cho AI chấm phát âm */
+  const [recording, setRecording] = useState<Recording | null>(null);
+  const [grading, setGrading] = useState(false);
 
   const promptReadyAt = useRef(0);
   const reactionRef = useRef(0);
@@ -155,7 +167,15 @@ export function ReflexDrill() {
         reactionRef.current = 0;
         setPhase('answering');
         setTimerOn(settings.strictTimer);
-        if (settings.useMic && mic.supported) mic.start();
+        /* Chỉ tự bật micro khi quyền ĐÃ được cấp từ trước.
+         *
+         * Đây là chỗ bản cũ hỏng: nó gọi mic.start() thẳng từ trong setTimeout
+         * sau khi đọc xong câu hỏi. Với trình duyệt, lời gọi đó không gắn với
+         * cú bấm nào của người dùng nên bị chặn — chặn im lặng, không báo lỗi,
+         * không hiện hộp thoại xin quyền. Nhìn từ ngoài: bấm micro, không có
+         * gì xảy ra. Lần đầu cứ để người dùng tự bấm; bấm xong quyền được nhớ
+         * lại và từ câu sau trở đi micro tự bật như ý ban đầu. */
+        if (settings.useMic && mic.supported && mic.preAuthorized) void mic.start();
       };
 
       // Với bài dịch Việt→Anh thì không đọc gì, vào thẳng.
@@ -171,28 +191,49 @@ export function ReflexDrill() {
     [settings.autoPlay, settings.strictTimer, settings.useMic, say],
   );
 
-  /* Ghi nhận thời điểm bạn thật sự bật ra tiếng */
+  /* Ghi nhận thời điểm bạn thật sự bật ra tiếng.
+   *
+   * Đo bằng ÂM LƯỢNG chứ không bằng lúc có chữ hiện ra. Nhận diện giọng nói
+   * trả chữ về chậm 300–800ms so với lúc miệng phát ra tiếng, mà đây lại là
+   * con số cốt lõi của cả app — đo qua đường chữ thì ai cũng bị cộng oan gần
+   * một giây. Khi không đo được âm lượng thì mới lấy tạm mốc chữ đầu tiên. */
   useEffect(() => {
-    if (phase === 'answering' && mic.transcript && reactionRef.current === 0) {
+    if (phase !== 'answering' || reactionRef.current !== 0) return;
+    if (mic.level > VOICE_ONSET || mic.transcript) {
       reactionRef.current = performance.now() - promptReadyAt.current;
     }
-  }, [mic.transcript, phase]);
+  }, [mic.level, mic.transcript, phase]);
 
   const finishAnswer = useCallback(
-    (spokenRaw: string, skipped = false) => {
+    async (skipped = false) => {
       if (!current) return;
-      mic.stop();
       stopSay();
       setTimerOn(false);
+      setGrading(true);
+
+      /* Phải CHỜ. Mảnh chữ cuối cùng và tệp ghi âm chỉ tới sau khi bảo dừng —
+       * bản cũ đọc thẳng state ngay lúc bấm nút nên thường xuyên mất vế cuối,
+       * và với câu ngắn thì mất sạch, app báo "chưa nói được" oan. */
+      const { text, recording: rec } = await mic.finish();
+      setRecording(rec);
 
       const reaction =
         reactionRef.current > 0 ? reactionRef.current : performance.now() - promptReadyAt.current;
-      const spoken = spokenRaw.trim();
+
+      let spoken = skipped ? '' : text.trim();
+
+      /* Trình duyệt không có nhận diện giọng nói (Firefox…) nhưng vẫn ghi âm
+       * được → nhờ AI chép lại, để bài vẫn được chấm như thường. */
+      if (!spoken && !skipped && rec && coach.ready && !mic.sttSupported) {
+        spoken = (await coach.transcribe(rec)).trim();
+      }
+
       const r = skipped || !spoken ? null : scoreAnswer(spoken, current.targets, current.model);
 
       setResult(r);
       setPhase('result');
       setShowModel(true);
+      setGrading(false);
 
       const fast = reaction < 3000 && !skipped && (r?.score ?? 0) >= 50;
       const xpGain = skipped
@@ -218,11 +259,13 @@ export function ReflexDrill() {
       if (settings.autoPlay) window.setTimeout(() => say(current.model), 350);
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [current, log, ensureCards, markWeak, settings.autoPlay, say, stopSay],
+    [current, log, ensureCards, markWeak, settings.autoPlay, say, stopSay, coach.ready],
   );
 
   const next = () => {
     stopSay();
+    setRecording(null);
+    coach.reset();
     if (idx + 1 >= queue.length) {
       const mins = Math.max(1, (Date.now() - sessionStart.current) / 60000);
       log({ minutes: Math.min(mins, 30) * 0.15 });
@@ -263,8 +306,10 @@ export function ReflexDrill() {
 
   const answering = phase === 'answering';
   const showing = phase === 'result';
-  /* Không có micro (không hỗ trợ hoặc bị chặn) → vẫn luyện được, chỉ là tự chấm */
-  const manualMode = !mic.supported || mic.state === 'denied';
+  /* Không thu âm được (không hỗ trợ, bị chặn, hoặc máy không có micro)
+   * → vẫn luyện được bình thường, chỉ là tự chấm bằng mắt. */
+  const manualMode =
+    !mic.supported || mic.state === 'denied' || mic.state === 'nomic' || mic.state === 'unsupported';
 
   return (
     <div className="mx-auto max-w-2xl space-y-5">
@@ -336,8 +381,11 @@ export function ReflexDrill() {
 
           <MicButton
             state={mic.state}
-            onStart={() => mic.start()}
-            onStop={() => finishAnswer(mic.transcript)}
+            level={mic.level}
+            resumed={mic.resumed}
+            disabled={grading}
+            onStart={() => void mic.start()}
+            onStop={() => void finishAnswer(false)}
             hint={
               mic.state === 'listening'
                 ? 'Đang nghe… nói xong bấm để chấm'
@@ -358,12 +406,18 @@ export function ReflexDrill() {
               <button
                 type="button"
                 className="btn-primary"
-                onClick={() => finishAnswer('', false)}
+                disabled={grading}
+                onClick={() => void finishAnswer(false)}
               >
                 <Check size={15} /> Tôi đã nói xong
               </button>
             )}
-            <button type="button" className="btn-ghost" onClick={() => finishAnswer('', true)}>
+            <button
+              type="button"
+              className="btn-ghost"
+              disabled={grading}
+              onClick={() => void finishAnswer(true)}
+            >
               <SkipForward size={15} /> Bí rồi, xem đáp án
             </button>
             <button
@@ -394,6 +448,8 @@ export function ReflexDrill() {
           reactionMs={reactionRef.current}
           onNext={next}
           isLast={idx + 1 >= queue.length}
+          coach={coach}
+          recording={recording}
         />
       )}
     </div>
@@ -582,6 +638,8 @@ function ResultCard({
   reactionMs,
   onNext,
   isLast,
+  coach,
+  recording,
 }: {
   prompt: ReflexPrompt;
   result: MatchResult | null;
@@ -589,7 +647,13 @@ function ResultCard({
   reactionMs: number;
   onNext: () => void;
   isLast: boolean;
+  coach: ReturnType<typeof useAiCoach>;
+  recording: Recording | null;
 }) {
+  /* Chấm phát âm là thao tác có tính phí và mất vài giây, nên để người học tự
+   * bấm khi muốn. Câu nào cũng gọi thì vừa tốn hạn mức, vừa phá nhịp của bài
+   * luyện phản xạ — mà nhịp mới là thứ bài này rèn. */
+  const canGrade = coach.ready && Boolean(recording);
   const tone =
     !result || result.verdict === 'weak'
       ? 'rose'
@@ -667,6 +731,26 @@ function ResultCard({
         <p className="mt-1 text-xs text-muted">{prompt.modelVi}</p>
       </div>
 
+      {/* ---- chấm phát âm bằng AI ---- */}
+      {canGrade && !coach.report && !coach.busy && !coach.error && (
+        <button
+          type="button"
+          onClick={() => void coach.review(recording, prompt.model)}
+          className="btn-violet w-full py-2.5 text-sm"
+        >
+          <Sparkles size={15} /> Chấm phát âm từng từ
+        </button>
+      )}
+
+      {(coach.busy || coach.report || coach.error) && (
+        <PronunciationCard
+          report={coach.report}
+          busy={coach.busy}
+          error={coach.error}
+          onRetry={recording ? () => void coach.review(recording, prompt.model) : undefined}
+        />
+      )}
+
       <EchoStep model={prompt.model} />
 
       <button type="button" onClick={onNext} className="btn-primary w-full py-3">
@@ -696,7 +780,8 @@ function EchoStep({ model }: { model: string }) {
   const { say } = useSpeaker();
   const mic = useMic();
   const [accuracy, setAccuracy] = useState<number | null>(null);
-  const manual = !mic.supported || mic.state === 'denied';
+  const manual =
+    !mic.supported || mic.state === 'denied' || mic.state === 'nomic' || mic.state === 'unsupported';
 
   const done = accuracy !== null;
 
@@ -747,12 +832,15 @@ function EchoStep({ model }: { model: string }) {
           <button
             type="button"
             className={cn('px-3 py-1.5 text-xs', mic.state === 'listening' ? 'btn-violet' : 'btn-ghost')}
-            onClick={() => {
-              if (mic.state === 'listening') mic.stop();
-              else {
-                say(model);
-                window.setTimeout(() => mic.start(finish), 120);
+            onClick={async () => {
+              if (mic.state === 'listening') {
+                const { text } = await mic.finish();
+                finish(text);
+                return;
               }
+              /* Đọc mẫu xong mới bật micro, chứ bật cùng lúc thì micro ăn luôn
+               * giọng của máy và chấm nhầm giọng máy thành giọng người học. */
+              say(model, { onEnd: () => void mic.start() });
             }}
           >
             {mic.state === 'listening' ? (
@@ -775,6 +863,18 @@ function EchoStep({ model }: { model: string }) {
             : 'Nghe lại và nhại thêm một lần nữa nếu bạn muốn chắc hơn.'
           : 'Bấm để nghe câu mẫu rồi nói theo. Chính bước này mới làm cụm từ đọng lại.'}
       </p>
+
+      {mic.state === 'listening' && (
+        <div className="mt-2 flex items-center gap-2">
+          <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-line">
+            <div
+              className="h-full rounded-full bg-mint transition-all duration-75"
+              style={{ width: `${Math.min(100, mic.level * 130)}%` }}
+            />
+          </div>
+          <span className="text-[10px] text-faint">đang nghe</span>
+        </div>
+      )}
 
       {mic.transcript && !done && (
         <p className="mt-2 rounded-lg bg-bg/50 px-3 py-1.5 text-xs text-ink">{mic.transcript}</p>

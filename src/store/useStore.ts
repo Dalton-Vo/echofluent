@@ -66,6 +66,18 @@ interface StoreState {
    */
   sync: { url: string; secret: string };
   lastSyncAt: number | null;
+  /**
+   * Cấu hình chấm phát âm bằng AI. `key` là khoá Google AI Studio của riêng
+   * bạn — nó nằm trong localStorage của máy này thôi, không có trong mã nguồn
+   * và không bao giờ được đẩy lên repo. Ai dùng Worker thì để trống `key` và
+   * điền `proxyUrl`, khi đó khoá nằm ở máy chủ, trình duyệt không giữ gì.
+   */
+  ai: { key: string; proxyUrl: string; model: string; enabled: boolean };
+  /**
+   * Nhắc luyện định kỳ. `nextAt` là mốc thời gian thật của lần nhắc kế tiếp,
+   * lưu lại để đóng app mở lại vẫn đúng nhịp chứ không đếm lại từ đầu.
+   */
+  nudge: { on: boolean; everyMin: number; nextAt: number | null; speak: boolean };
   onboarded: boolean;
 
   /* actions */
@@ -77,6 +89,10 @@ interface StoreState {
   setNote: (id: string, text: string) => void;
   markBackedUp: () => void;
   setSync: (patch: Partial<{ url: string; secret: string }>) => void;
+  setAi: (patch: Partial<{ key: string; proxyUrl: string; model: string; enabled: boolean }>) => void;
+  setNudge: (
+    patch: Partial<{ on: boolean; everyMin: number; nextAt: number | null; speak: boolean }>,
+  ) => void;
   /** Thay toàn bộ tiến độ bằng bản đã trộn từ máy chủ đồng bộ */
   hydrate: (next: PersistedState) => void;
   finishScenario: (id: string, score: number) => void;
@@ -137,6 +153,8 @@ export const useStore = create<StoreState>()(
       lastBackupAt: null,
       sync: { url: '', secret: '' },
       lastSyncAt: null,
+      ai: { key: '', proxyUrl: '', model: 'gemini-3.5-flash', enabled: true },
+      nudge: { on: false, everyMin: 15, nextAt: null, speak: true },
       onboarded: false,
 
       log: (d) =>
@@ -287,6 +305,10 @@ export const useStore = create<StoreState>()(
       markBackedUp: () => set({ lastBackupAt: Date.now() }),
 
       setSync: (patch) => set((s) => ({ sync: { ...s.sync, ...patch } })),
+
+      setAi: (patch) => set((s) => ({ ai: { ...s.ai, ...patch } })),
+
+      setNudge: (patch) => set((s) => ({ nudge: { ...s.nudge, ...patch } })),
 
       hydrate: (next) =>
         set({

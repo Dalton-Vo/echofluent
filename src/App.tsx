@@ -3,6 +3,7 @@ import { Route, Routes } from 'react-router-dom';
 import { Shell } from '@/components/layout/Shell';
 import { PinGate } from '@/components/PinGate';
 import { AchievementToast } from '@/components/shared/AchievementToast';
+import { NudgeQuiz } from '@/components/shared/NudgeQuiz';
 import { useStore } from '@/store/useStore';
 import { useAutoSync } from '@/hooks/useAutoSync';
 import { Dashboard } from '@/pages/Dashboard';
@@ -50,6 +51,7 @@ export default function App() {
             </Routes>
           </Shell>
           <AchievementToast />
+          <NudgeQuiz />
         </>
       )}
     </PinGate>

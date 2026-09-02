@@ -11,6 +11,8 @@ import {
 } from 'lucide-react';
 import { Card, Segmented, SectionHeader, Toggle, Chip } from '@/components/ui/primitives';
 import { SyncSection } from '@/components/settings/SyncSection';
+import { AiSection } from '@/components/settings/AiSection';
+import { NudgeSection } from '@/components/settings/NudgeSection';
 import { useStore } from '@/store/useStore';
 import { getEnglishVoices, onVoicesReady, speak } from '@/lib/speech';
 import { CHUNK_BY_ID } from '@/data/chunks';
@@ -340,6 +342,10 @@ export function Settings() {
           />
         </Card>
       </section>
+
+      <NudgeSection />
+
+      <AiSection />
 
       <SyncSection />
 

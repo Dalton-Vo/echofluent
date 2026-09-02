@@ -164,19 +164,43 @@ export function isSttSupported(): boolean {
 
 export interface ListenHandlers {
   onInterim?: (text: string) => void;
+  /** Gọi đúng MỘT lần, khi phiên nghe thật sự khép lại */
   onFinal?: (text: string) => void;
   onError?: (code: string) => void;
   onEnd?: () => void;
+  /** Trình duyệt tự ngắt vì im lặng và ta đã nối lại — dùng để báo cho người dùng */
+  onResume?: () => void;
 }
 
 export interface ListenController {
-  stop: () => void;
+  /** Dừng và CHỜ mảnh kết quả cuối cùng rồi mới trả về câu đầy đủ */
+  stop: () => Promise<string>;
   abort: () => void;
+  /** Đọc câu đang có ngay lập tức, không chờ */
+  text: () => string;
 }
 
+/** Lỗi không thể chữa — nối lại cũng vô ích */
+const FATAL = new Set(['not-allowed', 'service-not-allowed', 'audio-capture', 'language-not-supported']);
+
+/** Chặn trên số lần tự nối lại, phòng khi trình duyệt ngắt liên tục thành vòng lặp */
+const MAX_RESUMES = 20;
+
 /**
- * Bắt đầu nghe. Trả về controller để dừng.
- * Gộp mọi mảnh kết quả lại để câu dài không bị mất đoạn đầu.
+ * Bắt đầu nghe.
+ *
+ * Hai thứ ở đây quan trọng hơn hết, và cũng chính là hai chỗ bản cũ làm sai:
+ *
+ *  1. TỰ NỐI LẠI. Chrome tự tắt nhận diện sau khoảng 5–8 giây im lặng, kể cả
+ *     khi đã đặt `continuous = true`. Với bài luyện phản xạ thì người học im
+ *     vài giây đầu để nghĩ là chuyện bình thường — thế là micro tắt ngóm ngay
+ *     trước lúc họ mở miệng, và nhìn từ ngoài đúng y như "app không thu âm".
+ *     Nên khi bị ngắt mà ta chưa hề bảo dừng, ta bật lại ngay.
+ *
+ *  2. DỪNG CÓ CHỜ. `stop()` trả về Promise. Mảnh kết quả cuối cùng của trình
+ *     duyệt chỉ tới SAU khi gọi `stop()`; bản cũ đọc câu nói từ state React
+ *     ngay lúc bấm nút nên luôn thiếu vế cuối, thậm chí rỗng nếu người dùng
+ *     nói gọn — và app báo "chưa nói được" dù người ta vừa nói xong.
  */
 export function startListening(handlers: ListenHandlers = {}): ListenController | null {
   const Ctor = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -185,40 +209,89 @@ export function startListening(handlers: ListenHandlers = {}): ListenController 
     return null;
   }
 
-  const rec = new Ctor();
-  rec.lang = 'en-US';
-  rec.continuous = true;
-  rec.interimResults = true;
-  rec.maxAlternatives = 1;
-
+  let rec: SpeechRecognitionLike | null = null;
   let finalText = '';
-  let stopped = false;
+  let interimText = '';
+  let wantStop = false;
+  let finished = false;
+  let resumes = 0;
+  let fatal = '';
+  let resolveStop: ((t: string) => void) | null = null;
+  let stopTimer = 0;
 
-  rec.onresult = (e: SREvent) => {
-    let interim = '';
-    for (let i = e.resultIndex; i < e.results.length; i += 1) {
-      const res = e.results[i];
-      const txt = res[0]?.transcript ?? '';
-      if (res.isFinal) finalText += ` ${txt}`;
-      else interim += txt;
-    }
-    if (interim) handlers.onInterim?.(`${finalText} ${interim}`.trim());
-    else if (finalText) handlers.onInterim?.(finalText.trim());
+  /* Trình duyệt hay trả mảnh chữ kèm sẵn khoảng trắng đầu ("  about three days"),
+   * nên phải bóp lại. Khoảng trắng đôi lọt xuống dưới sẽ làm lệch bước tách từ
+   * lúc chấm điểm, và nhìn cũng lôi thôi khi hiện câu nói lên màn hình. */
+  const tidy = (s: string) => s.replace(/\s+/g, ' ').trim();
+
+  const full = () => tidy(`${finalText} ${interimText}`);
+
+  const finish = () => {
+    if (finished) return;
+    finished = true;
+    window.clearTimeout(stopTimer);
+    const text = full();
+    handlers.onFinal?.(text);
+    handlers.onEnd?.();
+    resolveStop?.(text);
+    resolveStop = null;
   };
 
-  rec.onerror = (e: SRErrorEvent) => {
-    handlers.onError?.(e.error || 'unknown');
-  };
+  const build = (): SpeechRecognitionLike => {
+    const r = new Ctor();
+    r.lang = 'en-US';
+    r.continuous = true;
+    r.interimResults = true;
+    r.maxAlternatives = 1;
 
-  rec.onend = () => {
-    if (!stopped) {
-      stopped = true;
-      handlers.onFinal?.(finalText.trim());
-      handlers.onEnd?.();
-    }
+    r.onresult = (e: SREvent) => {
+      let interim = '';
+      for (let i = e.resultIndex; i < e.results.length; i += 1) {
+        const res = e.results[i];
+        const txt = res[0]?.transcript ?? '';
+        if (res.isFinal) finalText = tidy(`${finalText} ${txt}`);
+        else interim += txt;
+      }
+      interimText = interim;
+      handlers.onInterim?.(full());
+    };
+
+    r.onerror = (e: SRErrorEvent) => {
+      const code = e.error || 'unknown';
+      // 'no-speech' và 'aborted' không phải hỏng hóc: cái đầu là người dùng còn
+      // đang nghĩ, cái sau là do chính ta gọi abort. Báo đỏ ở đây chỉ làm người
+      // học hoang mang vô cớ.
+      if (code === 'no-speech' || code === 'aborted') return;
+      if (FATAL.has(code)) fatal = code;
+      handlers.onError?.(code);
+    };
+
+    r.onend = () => {
+      // Ta chủ động dừng, hoặc gặp lỗi không chữa được → khép phiên.
+      if (wantStop || fatal) {
+        finish();
+        return;
+      }
+      // Bị ngắt ngoài ý muốn → nối lại để người dùng không mất câu.
+      if (resumes >= MAX_RESUMES) {
+        finish();
+        return;
+      }
+      resumes += 1;
+      try {
+        rec = build();
+        rec.start();
+        handlers.onResume?.();
+      } catch {
+        finish();
+      }
+    };
+
+    return r;
   };
 
   try {
+    rec = build();
     rec.start();
   } catch {
     handlers.onError?.('start-failed');
@@ -226,21 +299,42 @@ export function startListening(handlers: ListenHandlers = {}): ListenController 
   }
 
   return {
-    stop: () => {
-      try {
-        rec.stop();
-      } catch {
-        /* đã dừng rồi */
-      }
+    text: full,
+
+    stop() {
+      return new Promise<string>((resolve) => {
+        if (finished) {
+          resolve(full());
+          return;
+        }
+        wantStop = true;
+        resolveStop = resolve;
+        try {
+          rec?.stop();
+        } catch {
+          finish();
+          return;
+        }
+        // Safari đôi khi nuốt luôn sự kiện `onend`. Không có lưới này thì nút
+        // bấm treo vĩnh viễn ở trạng thái "đang nghe".
+        stopTimer = window.setTimeout(finish, 1500);
+      });
     },
-    abort: () => {
-      stopped = true;
+
+    abort() {
+      wantStop = true;
+      window.clearTimeout(stopTimer);
       try {
-        rec.abort();
+        rec?.abort();
       } catch {
         /* bỏ qua */
       }
-      handlers.onEnd?.();
+      if (!finished) {
+        finished = true;
+        handlers.onEnd?.();
+        resolveStop?.(full());
+        resolveStop = null;
+      }
     },
   };
 }

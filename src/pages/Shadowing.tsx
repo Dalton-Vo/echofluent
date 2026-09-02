@@ -10,10 +10,14 @@ import {
   Check,
   Trophy,
   Info,
+  Sparkles,
 } from 'lucide-react';
 import { Card, Chip, ProgressBar, SectionHeader, Segmented } from '@/components/ui/primitives';
 import { MicButton } from '@/components/shared/MicButton';
 import { useMic, useSpeaker } from '@/hooks/useSpeech';
+import { useAiCoach } from '@/hooks/useAiCoach';
+import { PronunciationCard } from '@/components/shared/PronunciationCard';
+import type { Recording } from '@/lib/audio';
 import { useStore } from '@/store/useStore';
 import { SHADOW_PACKS, parseShadowLine, plainShadowText } from '@/data/shadowing';
 import { shadowAccuracy } from '@/lib/match';
@@ -125,6 +129,8 @@ function PackPlayer({ pack, onExit }: { pack: ShadowPack; onExit: () => void }) 
 
   const { say } = useSpeaker();
   const mic = useMic();
+  const coach = useAiCoach();
+  const [recording, setRecording] = useState<Recording | null>(null);
 
   const line = pack.lines[idx];
   const plain = useMemo(() => plainShadowText(line.text), [line.text]);
@@ -264,11 +270,20 @@ function PackPlayer({ pack, onExit }: { pack: ShadowPack; onExit: () => void }) 
         <MicButton
           state={mic.state}
           size="md"
-          onStart={() => {
-            mic.start(handleRecordDone);
-            window.setTimeout(() => say(plain, { rate }), 250);
+          level={mic.level}
+          resumed={mic.resumed}
+          onStart={async () => {
+            setRecording(null);
+            coach.reset();
+            await mic.start();
+            // Giọng mẫu chạy song song — shadowing là nói ĐÈ lên, không phải nói sau.
+            say(plain, { rate });
           }}
-          onStop={() => mic.stop()}
+          onStop={async () => {
+            const { text, recording: rec } = await mic.finish();
+            setRecording(rec);
+            handleRecordDone(text);
+          }}
           hint={mic.state === 'listening' ? 'Đang thu…' : 'Thu âm & so khớp'}
         />
 
@@ -306,7 +321,31 @@ function PackPlayer({ pack, onExit }: { pack: ShadowPack; onExit: () => void }) 
           </div>
         )}
 
-        {(!mic.supported || mic.state === 'denied') && (
+        {/* Chấm phát âm bằng AI — với shadowing thì đây mới là thước đo thật.
+            Độ khớp chữ ở trên chỉ nói bạn đọc ĐÚNG TỪ hay không, còn nhịp và
+            ngữ điệu — thứ shadowing sinh ra để rèn — thì phải nghe mới biết. */}
+        {coach.ready && recording && !coach.report && !coach.busy && !coach.error && (
+          <button
+            type="button"
+            onClick={() => void coach.review(recording, plain)}
+            className="btn-violet px-4 py-2 text-sm"
+          >
+            <Sparkles size={15} /> Chấm phát âm từng từ
+          </button>
+        )}
+
+        {(coach.busy || coach.report || coach.error) && (
+          <div className="w-full max-w-lg">
+            <PronunciationCard
+              report={coach.report}
+              busy={coach.busy}
+              error={coach.error}
+              onRetry={recording ? () => void coach.review(recording, plain) : undefined}
+            />
+          </div>
+        )}
+
+        {(!mic.supported || mic.state === 'denied' || mic.state === 'nomic') && (
           <button
             type="button"
             onClick={() => {

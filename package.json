@@ -12,7 +12,8 @@
     "set-pin": "node scripts/set-pin.mjs",
     "test": "vitest run",
     "test:watch": "vitest",
-    "check": "tsc --noEmit && vitest run && vite build"
+    "check": "tsc --noEmit && vitest run && vite build",
+    "build-phonemes": "node scripts/build-phonemes.mjs"
   },
   "dependencies": {
     "framer-motion": "^11.11.17",
@@ -28,6 +29,7 @@
     "@types/react-dom": "^18.3.1",
     "@vitejs/plugin-react": "^4.3.4",
     "autoprefixer": "^10.4.20",
+    "cmu-pronouncing-dictionary": "^3.0.0",
     "happy-dom": "^20.12.0",
     "postcss": "^8.4.49",
     "tailwindcss": "^3.4.15",
