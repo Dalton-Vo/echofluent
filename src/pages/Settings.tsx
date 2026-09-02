@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { Card, Segmented, SectionHeader, Toggle, Chip } from '@/components/ui/primitives';
 import { SyncSection } from '@/components/settings/SyncSection';
+import { AccountSection } from '@/components/settings/AccountSection';
 import { AiSection } from '@/components/settings/AiSection';
 import { NudgeSection } from '@/components/settings/NudgeSection';
 import { MicCheckSection } from '@/components/settings/MicCheckSection';
@@ -349,6 +350,8 @@ export function Settings() {
       <NudgeSection />
 
       <AiSection />
+
+      <AccountSection />
 
       <SyncSection />
 

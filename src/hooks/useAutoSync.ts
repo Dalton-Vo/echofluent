@@ -38,7 +38,25 @@ export function useAutoSync() {
     document.addEventListener('visibilitychange', onHidden);
     window.addEventListener('pagehide', run);
 
+    /* Đẩy định kỳ khi app đang mở.
+     *
+     * Hai mốc mở/rời app chỉ đủ khi app được đóng tử tế. Thực tế hay gặp:
+     * trình duyệt bị hệ điều hành thu hồi bộ nhớ, máy sập nguồn, hoặc tab bị
+     * đóng bằng cách kill tiến trình — cả ba đều không bắn `pagehide`. Học
+     * xong một buổi rồi mất trắng vì mấy chuyện đó thì người dùng bỏ app
+     * ngay, nên cứ mười lăm phút đẩy một lần cho chắc.
+     *
+     * Chỉ chạy khi tab đang hiện: nền bị bóp cổ hẹn giờ nên hẹn cũng không
+     * đúng nhịp, mà lúc đó cũng chẳng có gì mới để đẩy. */
+    const timer = window.setInterval(
+      () => {
+        if (document.visibilityState === 'visible') run();
+      },
+      15 * 60_000,
+    );
+
     return () => {
+      window.clearInterval(timer);
       document.removeEventListener('visibilitychange', onHidden);
       window.removeEventListener('pagehide', run);
     };

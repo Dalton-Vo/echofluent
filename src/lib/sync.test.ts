@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildSetupLink, readSetupLink } from './sync';
+import { buildSetupLink, readSetupLink, buildSyncCode, readSyncCode, randomSecret } from './sync';
 
 /* Link cài đặt là thứ người dùng mở trên điện thoại — hỏng cái này thì phải gõ
  * tay cả địa chỉ lẫn mật khẩu trên màn hình nhỏ. */
@@ -35,5 +35,50 @@ describe('link cài đặt đồng bộ', () => {
     // mã hoá đúng cách nhưng thiếu mật khẩu → vẫn phải trả null
     const thieuMatKhau = btoa(encodeURIComponent('{"u":"https://x.workers.dev"}'));
     expect(readSetupLink(`#/settings?sync=${thieuMatKhau}`)).toBeNull();
+  });
+});
+
+describe('mã đồng bộ — thứ đóng vai "đăng nhập"', () => {
+  const url = 'https://echofluent-sync.dalton.workers.dev';
+  const secret = 'mat-khau-rat-dai-va-ngau-nhien';
+
+  it('gói rồi mở lại ra đúng thứ ban đầu', () => {
+    const code = buildSyncCode(url, secret);
+    expect(code.startsWith('EF1.')).toBe(true);
+    expect(readSyncCode(code)).toEqual({ url, secret });
+  });
+
+  it('mã không chứa ký tự khó gõ hay dễ nhầm khi chép tay', () => {
+    expect(buildSyncCode(url, secret)).toMatch(/^EF1\.[A-Za-z0-9_-]+$/);
+  });
+
+  it('bỏ qua khoảng trắng và xuống dòng dính vào khi gửi qua chat', () => {
+    const code = buildSyncCode(url, secret);
+    expect(readSyncCode(`  ${code}\n`)).toEqual({ url, secret });
+    expect(readSyncCode(code.slice(0, 10) + '\n' + code.slice(10))).toEqual({ url, secret });
+  });
+
+  it('từ chối mã rác thay vì ném lỗi', () => {
+    expect(readSyncCode('')).toBeNull();
+    expect(readSyncCode('linh tinh')).toBeNull();
+    expect(readSyncCode('EF1.khong-phai-base64-!!!')).toBeNull();
+  });
+
+  it('từ chối địa chỉ http — mã này mang theo mật khẩu', () => {
+    const bad = 'EF1.' + btoa(encodeURIComponent(JSON.stringify({ u: 'http://x.dev', s: 'a' })))
+      .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    expect(readSyncCode(bad)).toBeNull();
+  });
+
+  it('không sinh mã khi còn thiếu địa chỉ hoặc mật khẩu', () => {
+    expect(buildSyncCode('', secret)).toBe('');
+    expect(buildSyncCode(url, '  ')).toBe('');
+  });
+
+  it('mật khẩu sinh ra đủ dài và mỗi lần một khác', () => {
+    const a = randomSecret();
+    const b = randomSecret();
+    expect(a.length).toBeGreaterThanOrEqual(30);
+    expect(a).not.toBe(b);
   });
 });

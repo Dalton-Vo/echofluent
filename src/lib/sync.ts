@@ -180,3 +180,70 @@ export function readSetupLink(hash: string): { url: string; secret: string } | n
     return null;
   }
 }
+
+
+/* ============================================================================
+ *  Mã đồng bộ — thứ đóng vai "tài khoản"
+ * ============================================================================
+ *
+ *  App này không có máy chủ tài khoản, nên cũng không có đăng nhập theo nghĩa
+ *  thường. Thay vào đó là MỘT mã duy nhất gói cả địa chỉ máy chủ lẫn mật khẩu.
+ *  Dán mã đó vào máy mới là tiến độ về đủ — về mặt sử dụng thì không khác gì
+ *  đăng nhập.
+ *
+ *  Vì sao không làm tài khoản thật: tài khoản đòi máy chủ giữ mật khẩu người
+ *  dùng, và giữ mật khẩu cho tử tế là việc dễ làm sai tới mức nguy hiểm. Một
+ *  mã ngẫu nhiên đủ dài thì không có gì để lộ ngoài chính nó.
+ *
+ *  Mã này CHÍNH LÀ mật khẩu. Ai cầm được mã là đọc ghi được tiến độ của bạn —
+ *  đừng đưa lên chỗ công khai.
+ * ========================================================================== */
+
+const CODE_PREFIX = 'EF1.';
+
+/** Base64 an toàn cho URL và cho việc gõ tay: bỏ +/= dễ nhầm */
+function toUrlSafe(b64: string): string {
+  return b64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
+function fromUrlSafe(s: string): string {
+  const t = s.replace(/-/g, '+').replace(/_/g, '/');
+  return t + '='.repeat((4 - (t.length % 4)) % 4);
+}
+
+/** Gói địa chỉ Worker và mật khẩu thành một mã để mang sang máy khác */
+export function buildSyncCode(url: string, secret: string): string {
+  if (!url.trim() || !secret.trim()) return '';
+  const packed = btoa(encodeURIComponent(JSON.stringify({ u: url.trim(), s: secret.trim() })));
+  return CODE_PREFIX + toUrlSafe(packed);
+}
+
+/**
+ * Đọc mã đồng bộ.
+ *
+ * Bỏ qua khoảng trắng ở hai đầu và cả xuống dòng: mã hay đi qua Zalo hay ghi
+ * chú rồi dính thêm ký tự thừa, mà lỗi đó thì người dùng không tài nào tự
+ * nhìn ra được.
+ */
+export function readSyncCode(code: string): { url: string; secret: string } | null {
+  const clean = code.trim().replace(/\s+/g, '');
+  if (!clean.startsWith(CODE_PREFIX)) return null;
+  try {
+    const parsed = JSON.parse(
+      decodeURIComponent(atob(fromUrlSafe(clean.slice(CODE_PREFIX.length)))),
+    ) as { u?: string; s?: string };
+    if (!parsed.u || !parsed.s) return null;
+    // Chỉ nhận https — mã này mang theo mật khẩu, gửi qua http là lộ.
+    if (!/^https:\/\//i.test(parsed.u)) return null;
+    return { url: parsed.u, secret: parsed.s };
+  } catch {
+    return null;
+  }
+}
+
+/** Sinh mật khẩu đồng bộ ngẫu nhiên — dùng khi lập "tài khoản" lần đầu */
+export function randomSecret(): string {
+  const bytes = new Uint8Array(24);
+  crypto.getRandomValues(bytes);
+  return toUrlSafe(btoa(String.fromCharCode(...bytes)));
+}
