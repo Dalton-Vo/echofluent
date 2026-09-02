@@ -22,12 +22,12 @@ import { MicButton } from '@/components/shared/MicButton';
 import { SpeakButton } from '@/components/shared/SpeakButton';
 import { CountdownRing } from '@/components/shared/CountdownRing';
 import { PronunciationCard } from '@/components/shared/PronunciationCard';
-import { useMic, useSpeaker } from '@/hooks/useSpeech';
+import { useAutoStop, useMic, useSpeaker } from '@/hooks/useSpeech';
 import { useAiCoach } from '@/hooks/useAiCoach';
 import type { Recording } from '@/lib/audio';
 import { useStore } from '@/store/useStore';
 import { REFLEX } from '@/data/reflex';
-import { scoreAnswer, shadowAccuracy, shuffle, type MatchResult } from '@/lib/match';
+import { looksLikeEcho, scoreAnswer, shadowAccuracy, shuffle, type MatchResult } from '@/lib/match';
 import { DOMAIN_LABEL, type ReflexPrompt, type ReflexType } from '@/types';
 import { cn, formatMs, sample } from '@/lib/utils';
 
@@ -66,6 +66,15 @@ interface Attempt {
 /** Ngưỡng âm lượng coi là "đã bật ra tiếng" — thở hay tiếng ồn phòng nằm dưới mức này */
 const VOICE_ONSET = 0.07;
 
+/** Từ mức này trở lên là coi như trả lời được, cho đi tiếp */
+const PASS_SCORE = 60;
+
+/**
+ * Bắt nói lại tối đa hai lần rồi thôi.
+ * Ép mãi một câu không làm người ta nói đúng hơn, chỉ làm người ta bỏ app.
+ */
+const MAX_TRIES = 3;
+
 export function ReflexDrill() {
   const settings = useStore((s) => s.settings);
   const log = useStore((s) => s.log);
@@ -92,6 +101,10 @@ export function ReflexDrill() {
   /** Bản ghi âm của câu vừa trả lời — để dành cho AI chấm phát âm */
   const [recording, setRecording] = useState<Recording | null>(null);
   const [grading, setGrading] = useState(false);
+  /** Lần thử thứ mấy cho câu hiện tại */
+  const [tries, setTries] = useState(0);
+  /** Lý do bị bắt nói lại — hiện ngay trên khu trả lời */
+  const [retryNote, setRetryNote] = useState<string | null>(null);
 
   const promptReadyAt = useRef(0);
   const reactionRef = useRef(0);
@@ -159,6 +172,8 @@ export function ReflexDrill() {
       setShowModel(false);
       setExpired(false);
       setTimerOn(false);
+      setTries(0);
+      setRetryNote(null);
       mic.reset();
       setPhase('prompt');
 
@@ -204,6 +219,31 @@ export function ReflexDrill() {
     }
   }, [mic.level, mic.transcript, phase]);
 
+  /**
+   * Đưa người học về lại khu trả lời để nói lần nữa.
+   *
+   * Có `model` thì đọc câu mẫu trước rồi mới mở micro — nghe xong mới nói lại
+   * thì mới có cái để bám vào; bắt nói lại tay không thì lần hai cũng sai y
+   * lần một. Micro chỉ bật SAU khi đọc xong, không thì nó thu luôn giọng máy.
+   */
+  const askRetry = useCallback(
+    (note: string, model?: string) => {
+      setRetryNote(note);
+      setResult(null);
+      setPhase('answering');
+      setTimerOn(false);
+      setExpired(false);
+      mic.reset();
+      promptReadyAt.current = performance.now();
+      reactionRef.current = 0;
+
+      if (model) say(model, { onEnd: () => void mic.start() });
+      else if (mic.preAuthorized) void mic.start();
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [say],
+  );
+
   const finishAnswer = useCallback(
     async (skipped = false) => {
       if (!current) return;
@@ -234,12 +274,45 @@ export function ReflexDrill() {
         spoken = (await coach.transcribe(rec)).trim();
       }
 
+      /* Micro thu lại chính giọng máy vừa đọc câu hỏi → không phải câu trả lời.
+       * Chấm nó là vừa cho điểm oan, vừa ghi vào lịch sử một câu người học
+       * chưa hề nói. Cho nói lại, và nói rõ vì sao. */
+      if (!skipped && spoken && looksLikeEcho(spoken, current.cue)) {
+        setGrading(false);
+        askRetry(
+          'Micro thu lại giọng của máy chứ không phải giọng bạn. Đeo tai nghe, hoặc chờ máy đọc xong hẳn rồi hãy nói.',
+        );
+        return;
+      }
+
       const r = skipped || !spoken ? null : scoreAnswer(spoken, current.targets, current.model);
+
+      /* Chưa đạt → bắt nói lại thay vì cho đi tiếp.
+       *
+       * Đây là chỗ bản cũ dễ dãi: nói sai hay không nói gì cũng vẫn hiện đáp
+       * án rồi sang câu mới. Đọc đáp án bằng mắt gần như không đọng lại gì —
+       * phải bật ra bằng miệng thì cụm từ mới chuyển từ "hiểu" sang "nói
+       * được". Nên sai thì quay lại nói tiếp, tối đa ba lượt. */
+      const passed = !skipped && Boolean(r) && (r?.score ?? 0) >= PASS_SCORE;
+      const attemptNo = tries + 1;
+
+      if (!passed && !skipped && attemptNo < MAX_TRIES) {
+        setTries(attemptNo);
+        setGrading(false);
+        askRetry(
+          !spoken
+            ? 'Chưa nghe được gì. Bấm micro rồi nói to hơn một chút.'
+            : `Mới được ${r?.score ?? 0}/100 — chưa tới. Nghe câu mẫu rồi nói lại.`,
+          !spoken ? undefined : current.model,
+        );
+        return;
+      }
 
       setResult(r);
       setPhase('result');
       setShowModel(true);
       setGrading(false);
+      setRetryNote(null);
 
       const fast = reaction < 3000 && !skipped && (r?.score ?? 0) >= 50;
       const xpGain = skipped
@@ -265,7 +338,15 @@ export function ReflexDrill() {
       if (settings.autoPlay) window.setTimeout(() => say(current.model), 350);
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [current, log, ensureCards, markWeak, settings.autoPlay, say, stopSay, coach.ready],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [current, log, ensureCards, markWeak, settings.autoPlay, say, stopSay, coach.ready, tries],
+  );
+
+  /* Nói xong là tự chốt, khỏi phải rướn tay bấm dừng. */
+  useAutoStop(
+    mic.level,
+    phase === 'answering' && mic.state === 'listening' && !grading,
+    () => void finishAnswer(false),
   );
 
   const next = () => {
@@ -385,6 +466,15 @@ export function ReflexDrill() {
             />
           )}
 
+          {retryNote && (
+            <div className="animate-pop w-full max-w-lg rounded-xl border border-amber/30 bg-amber/[.07] px-4 py-3">
+              <p className="flex items-center gap-2 text-sm font-bold text-amber">
+                <RotateCcw size={14} /> Nói lại lần {tries + 1}/{MAX_TRIES}
+              </p>
+              <p className="mt-1 text-xs leading-relaxed text-muted">{retryNote}</p>
+            </div>
+          )}
+
           <MicButton
             state={mic.state}
             level={mic.level}
@@ -397,7 +487,7 @@ export function ReflexDrill() {
             onStop={() => void finishAnswer(false)}
             hint={
               mic.state === 'listening'
-                ? 'Đang nghe… nói xong bấm để chấm'
+                ? 'Đang nghe… nói xong là tự chấm'
                 : manualMode
                   ? 'Nói ra miệng rồi bấm nút bên dưới'
                   : 'Bấm rồi nói'

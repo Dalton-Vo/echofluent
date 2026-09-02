@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { contentWords, normalize, scoreAnswer, shadowAccuracy, shuffle, words } from './match';
+import { contentWords, normalize, scoreAnswer, shadowAccuracy, shuffle, words, looksLikeEcho } from './match';
 
 /* Chấm điểm là thứ người học nhìn thấy nhiều nhất — nó phải dễ tính đúng cách,
  * chứ không phải dễ tính bừa. Bộ test này khoá lại hành vi đó. */
@@ -129,5 +129,30 @@ describe('shuffle', () => {
 
   it('cùng hạt giống cho cùng thứ tự', () => {
     expect(shuffle(['a', 'b', 'c', 'd', 'e'], 99)).toEqual(shuffle(['a', 'b', 'c', 'd', 'e'], 99));
+  });
+});
+
+describe('looksLikeEcho — chặn micro thu lại giọng máy', () => {
+  const cue = 'How do you like living here?';
+
+  it('bắt đúng ca thật gặp trên máy: câu hỏi bị chép lại thành câu trả lời', () => {
+    expect(looksLikeEcho('How do you like How do you like being here', cue)).toBe(true);
+  });
+
+  it('bắt cả khi nghe lại nguyên văn câu hỏi', () => {
+    expect(looksLikeEcho('how do you like living here', cue)).toBe(true);
+  });
+
+  it('KHÔNG chặn câu trả lời thật', () => {
+    expect(looksLikeEcho("It's pretty quiet, I like it a lot.", cue)).toBe(false);
+  });
+
+  it('KHÔNG chặn câu trả lời có nhại lại một phần câu hỏi', () => {
+    expect(looksLikeEcho('I like living here because it is close to work', cue)).toBe(false);
+  });
+
+  it('không gục với chuỗi rỗng', () => {
+    expect(looksLikeEcho('', cue)).toBe(false);
+    expect(looksLikeEcho('hello', '')).toBe(false);
   });
 });

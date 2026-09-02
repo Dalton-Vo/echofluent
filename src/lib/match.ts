@@ -152,3 +152,45 @@ export function shuffle<T>(arr: T[], seed = Date.now()): T[] {
   }
   return a;
 }
+
+
+/* ============================================================================
+ *  Chặn tiếng vọng
+ * ========================================================================== */
+
+/**
+ * Câu vừa nghe được có phải chính là câu app vừa đọc ra loa không.
+ *
+ * Khi không đeo tai nghe, micro thu luôn giọng máy đọc câu hỏi, và nhận diện
+ * giọng nói chép nó lại y như thể người học vừa nói. Hậu quả thấy rõ trên màn
+ * hình: câu hỏi "How do you like living here?" biến thành câu trả lời
+ * "How do you like How do you like being here" — rồi bị chấm điểm nghiêm túc
+ * như một câu trả lời thật.
+ *
+ * Chống tiếng vọng của trình duyệt (`echoCancellation`) không cứu được ca này
+ * vì bộ đọc của hệ điều hành đi theo đường âm thanh riêng, không nằm trong đồ
+ * thị mà bộ khử tiếng vọng nhìn thấy.
+ *
+ * Cách nhận ra: câu nghe được trùng phần lớn với câu vừa đọc, mà lại gần như
+ * không có chữ nào ngoài câu đó. Người học trả lời thật thì luôn mang theo từ
+ * mới — kể cả khi họ nhại lại một phần câu hỏi.
+ */
+export function looksLikeEcho(spoken: string, promptText: string): boolean {
+  const said = new Set(words(spoken));
+  const prompt = new Set(words(promptText));
+  if (!said.size || !prompt.size) return false;
+
+  /* Đếm theo TỪ KHÁC NHAU, không theo tổng số từ. Tiếng vọng thường lặp cụm —
+   * ca thật gặp trên máy là "How do you like How do you like being here", dài
+   * gấp rưỡi câu hỏi gốc. Đo bằng tổng số từ thì đúng những ca lặp nặng nhất
+   * lại lọt lưới vì bị tưởng nhầm là câu trả lời dài. */
+  let outside = 0;
+  for (const w of said) if (!prompt.has(w)) outside += 1;
+
+  /* Câu quá ngắn thì không đủ căn cứ. "living here" đúng là toàn chữ của câu
+   * hỏi, nhưng cũng có thể là người học trả lời cụt — thà bỏ sót một tiếng
+   * vọng còn hơn vứt oan câu trả lời thật của người ta. */
+  if (said.size < 4) return false;
+
+  return (said.size - outside) / said.size >= 0.8;
+}

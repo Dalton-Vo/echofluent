@@ -358,3 +358,73 @@ export function useCountdown(seconds: number, running: boolean, onExpire?: () =>
   const elapsedMs = seconds * 1000 - left;
   return { left, elapsedMs, ratio: left / (seconds * 1000) };
 }
+
+
+/* ============================================================================
+ *  Tự dừng khi người học đã nói xong
+ * ========================================================================== */
+
+/**
+ * Theo dõi âm lượng để biết lúc nào người học nói xong, rồi tự chốt câu.
+ *
+ * Trước đây nói xong phải rướn tay bấm nút dừng. Nghe thì nhỏ, nhưng nó phá
+ * đúng thứ bài này rèn: vừa dứt câu đã phải nghĩ tới cái nút, thay vì để câu
+ * chảy ra tự nhiên rồi nghe máy chấm. Nói xong là xong.
+ *
+ * Chỉ tính im lặng SAU KHI đã nghe thấy tiếng. Nếu không thì mấy giây đầu —
+ * lúc người học còn đang nghĩ, vốn là chuyện bình thường của bài phản xạ — sẽ
+ * bị coi là "nói xong rồi" và câu bị chốt trước cả khi họ mở miệng.
+ */
+export function useAutoStop(
+  level: number,
+  active: boolean,
+  onDone: () => void,
+  opts: { threshold?: number; silenceMs?: number; maxMs?: number } = {},
+) {
+  const { threshold = 0.07, silenceMs = 1600, maxMs = 25_000 } = opts;
+
+  const spoke = useRef(false);
+  const quietSince = useRef(0);
+  const startedAt = useRef(0);
+  const fired = useRef(false);
+  const doneRef = useRef(onDone);
+  doneRef.current = onDone;
+
+  useEffect(() => {
+    if (!active) {
+      spoke.current = false;
+      fired.current = false;
+      quietSince.current = 0;
+      startedAt.current = performance.now();
+      return;
+    }
+    if (!startedAt.current) startedAt.current = performance.now();
+  }, [active]);
+
+  useEffect(() => {
+    if (!active || fired.current) return;
+    const now = performance.now();
+
+    // Lưới an toàn: micro kẹt mở thì cũng phải chốt, đừng thu vô tận.
+    if (startedAt.current && now - startedAt.current > maxMs) {
+      fired.current = true;
+      doneRef.current();
+      return;
+    }
+
+    if (level > threshold) {
+      spoke.current = true;
+      quietSince.current = 0;
+      return;
+    }
+    if (!spoke.current) return;
+
+    if (!quietSince.current) quietSince.current = now;
+    else if (now - quietSince.current >= silenceMs) {
+      fired.current = true;
+      doneRef.current();
+    }
+  }, [level, active, threshold, silenceMs, maxMs]);
+
+  return { spoke: spoke.current };
+}

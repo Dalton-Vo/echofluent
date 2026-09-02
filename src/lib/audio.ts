@@ -164,6 +164,18 @@ export function createLevelMeter(stream: MediaStream): LevelMeter {
   analyser.smoothingTimeConstant = 0.7;
   src.connect(analyser);
 
+  /* Safari không bơm dữ liệu qua MediaStreamAudioSourceNode nếu đồ thị âm
+   * thanh không dẫn tới đầu ra. Nhánh treo lơ lửng bị coi là vô dụng và
+   * WebKit ngừng xử lý — analyser vẫn trả về mảng 0 y như lúc context bị
+   * treo, lại cũng không báo lỗi gì. Nên phải nối tiếp tới loa, nhưng qua
+   * một nút khuếch đại đặt bằng 0 để không ai nghe thấy gì: đồ thị "sống"
+   * mà tai người thì im lặng. Thiếu đoạn này thì trên Safari vạch mức âm
+   * chết cứng dù micro vẫn thu tốt. */
+  const mute = ctx.createGain();
+  mute.gain.value = 0;
+  analyser.connect(mute);
+  mute.connect(ctx.destination);
+
   const buf = new Float32Array(analyser.fftSize);
   let smooth = 0;
   let stopped = false;
@@ -188,6 +200,7 @@ export function createLevelMeter(stream: MediaStream): LevelMeter {
       try {
         src.disconnect();
         analyser.disconnect();
+        mute.disconnect();
       } catch {
         /* đã ngắt rồi */
       }
