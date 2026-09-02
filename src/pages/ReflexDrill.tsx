@@ -22,6 +22,7 @@ import { MicButton } from '@/components/shared/MicButton';
 import { SpeakButton } from '@/components/shared/SpeakButton';
 import { CountdownRing } from '@/components/shared/CountdownRing';
 import { PronunciationCard } from '@/components/shared/PronunciationCard';
+import { AnswerFeedback, Confetti, type Verdict } from '@/components/shared/AnswerFeedback';
 import { useAutoStop, useMic, useSpeaker } from '@/hooks/useSpeech';
 import { useAiCoach } from '@/hooks/useAiCoach';
 import type { Recording } from '@/lib/audio';
@@ -75,6 +76,12 @@ const PASS_SCORE = 60;
  */
 const MAX_TRIES = 3;
 
+/**
+ * Đổi lời khen mỗi lần. Khen y hệt nhau mười câu liền thì tới câu thứ ba là
+ * người ta thôi đọc, và lời khen mất sạch tác dụng.
+ */
+const PASS_PRAISE = ['Chuẩn!', 'Ngon!', 'Đúng rồi!', 'Bật ra được rồi đó!', 'Tốt lắm!'];
+
 export function ReflexDrill() {
   const settings = useStore((s) => s.settings);
   const log = useStore((s) => s.log);
@@ -105,6 +112,13 @@ export function ReflexDrill() {
   const [tries, setTries] = useState(0);
   /** Lý do bị bắt nói lại — hiện ngay trên khu trả lời */
   const [retryNote, setRetryNote] = useState<string | null>(null);
+  /** Dải phản hồi đúng/sai trượt lên từ đáy màn hình */
+  const [feedback, setFeedback] = useState<{
+    verdict: Verdict;
+    score: number | null;
+    reactionMs: number;
+    message: string;
+  } | null>(null);
 
   const promptReadyAt = useRef(0);
   const reactionRef = useRef(0);
@@ -174,6 +188,7 @@ export function ReflexDrill() {
       setTimerOn(false);
       setTries(0);
       setRetryNote(null);
+      setFeedback(null);
       mic.reset();
       setPhase('prompt');
 
@@ -229,6 +244,8 @@ export function ReflexDrill() {
   const askRetry = useCallback(
     (note: string, model?: string) => {
       setRetryNote(note);
+      // Dải phản hồi tự tắt khi micro mở lại, không thì nó che mất nút bấm.
+      window.setTimeout(() => setFeedback(null), 1800);
       setResult(null);
       setPhase('answering');
       setTimerOn(false);
@@ -299,6 +316,12 @@ export function ReflexDrill() {
       if (!passed && !skipped && attemptNo < MAX_TRIES) {
         setTries(attemptNo);
         setGrading(false);
+        setFeedback({
+          verdict: 'retry',
+          score: r?.score ?? null,
+          reactionMs: 0,
+          message: spoken ? 'Chưa tới — nói lại nào' : 'Chưa nghe được gì',
+        });
         askRetry(
           !spoken
             ? 'Chưa nghe được gì. Bấm micro rồi nói to hơn một chút.'
@@ -313,6 +336,16 @@ export function ReflexDrill() {
       setShowModel(true);
       setGrading(false);
       setRetryNote(null);
+      setFeedback({
+        verdict: skipped ? 'skip' : passed ? 'pass' : 'retry',
+        score: r?.score ?? null,
+        reactionMs: skipped ? 0 : reaction,
+        message: skipped
+          ? 'Bỏ qua — đọc to câu mẫu một lần trước khi đi tiếp'
+          : passed
+            ? PASS_PRAISE[Math.floor(Math.random() * PASS_PRAISE.length)]
+            : 'Hết lượt rồi — nghe câu mẫu và nhại lại',
+      });
 
       const fast = reaction < 3000 && !skipped && (r?.score ?? 0) >= 50;
       const xpGain = skipped
@@ -415,8 +448,11 @@ export function ReflexDrill() {
         </button>
       </div>
 
-      {/* thẻ câu hỏi */}
-      <Card className="relative overflow-hidden !p-0">
+      {/* thẻ câu hỏi — lắc một cái khi bị bắt nói lại, biết ngay không cần đọc chữ */}
+      <Card
+        key={`q-${idx}-${tries}`}
+        className={cn('relative overflow-hidden !p-0', tries > 0 && 'animate-shake')}
+      >
         <div className="flex items-center justify-between gap-2 border-b border-line/70 px-5 py-3">
           <div className="flex flex-wrap items-center gap-1.5">
             <Chip tone={current.type === 'translate' ? 'violet' : 'mint'}>
@@ -535,6 +571,19 @@ export function ReflexDrill() {
             </p>
           )}
         </Card>
+      )}
+
+      {/* Dải phản hồi cố định ở đáy — chừa chỗ để nó không che nút bấm */}
+      {feedback && <div className="h-24" aria-hidden />}
+      {feedback && (
+        <AnswerFeedback
+          verdict={feedback.verdict}
+          score={feedback.score}
+          reactionMs={feedback.reactionMs}
+          message={feedback.message}
+          action={showing ? next : undefined}
+          actionLabel={showing ? (idx + 1 >= queue.length ? 'Xem tổng kết' : 'Câu tiếp') : undefined}
+        />
       )}
 
       {/* kết quả */}
@@ -999,8 +1048,12 @@ function Summary({ attempts, onAgain }: { attempts: Attempt[]; onAgain: () => vo
 
   return (
     <div className="mx-auto max-w-2xl space-y-5">
+      {/* Chỉ ăn mừng khi thật sự làm tốt. Rắc giấy vụn cho mọi kết quả thì nó
+          thành đồ trang trí, và lần làm tốt thật cũng chẳng còn ý nghĩa gì. */}
+      {avgScore >= 70 && <Confetti />}
+
       <Card className="animate-fade-up text-center">
-        <div className="text-4xl">{avgScore >= 70 ? '🔥' : avgScore >= 45 ? '💪' : '🌱'}</div>
+        <div className="animate-stamp text-4xl">{avgScore >= 70 ? '🔥' : avgScore >= 45 ? '💪' : '🌱'}</div>
         <h1 className="mt-2 text-2xl font-extrabold text-ink">Xong phiên rồi!</h1>
         <p className="mt-1 text-sm text-muted">
           {avgScore >= 70

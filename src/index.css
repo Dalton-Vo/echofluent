@@ -155,3 +155,19 @@ body {
     transition-duration: 0.01ms !important;
   }
 }
+
+
+/* ============================================================================
+ *  Người bật "giảm chuyển động" trong hệ điều hành thường bật vì chóng mặt
+ *  hoặc say chuyển động thật, không phải vì thích. Hoạt ảnh nảy và lắc là đúng
+ *  loại gây khó chịu nhất, nên tắt hẳn thay vì làm nhẹ đi.
+ * ========================================================================== */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
