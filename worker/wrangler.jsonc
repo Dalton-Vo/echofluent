@@ -1,20 +1,23 @@
 {
-  "$schema": "./node_modules/wrangler/config-schema.json",
-  "name": "echofluent-sync",
-  "main": "src/index.ts",
-  "compatibility_date": "2026-08-25",
-
-  // Kho lưu tiến độ. Không cần điền "id": lần đầu chạy `wrangler deploy`,
-  // wrangler tự tạo namespace và tự gắn id vào file này.
-  "kv_namespaces": [{ "binding": "STATE" }],
-
-  // Trang được phép gọi tới. Muốn thêm tên miền khác thì ngăn cách bằng dấu phẩy.
-  "vars": {
-    "ALLOWED_ORIGINS": "https://dalton-vo.github.io,http://localhost:5180"
-  },
-
-  "observability": { "enabled": true }
-
-  // Mật khẩu đồng bộ KHÔNG nằm ở đây. Đặt bằng lệnh:
-  //   npx wrangler secret put SYNC_SECRET
+	"$schema": "./node_modules/wrangler/config-schema.json",
+	"name": "echofluent-sync",
+	"main": "src/index.ts",
+	"compatibility_date": "2026-08-25",
+	// Kho lưu tiến độ. Không cần điền "id": lần đầu chạy `wrangler deploy`,
+	// wrangler tự tạo namespace và tự gắn id vào file này.
+	"kv_namespaces": [
+		{
+			"binding": "STATE",
+			"id": "8ed71f5dbe044f418d42d75f78089f8a"
+		}
+	],
+	// Trang được phép gọi tới. Muốn thêm tên miền khác thì ngăn cách bằng dấu phẩy.
+	"vars": {
+		"ALLOWED_ORIGINS": "https://dalton-vo.github.io,http://localhost:5180"
+	},
+	"observability": {
+		"enabled": true
+	}
+	// Mật khẩu đồng bộ KHÔNG nằm ở đây. Đặt bằng lệnh:
+	//   npx wrangler secret put SYNC_SECRET
 }
