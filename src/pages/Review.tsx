@@ -6,6 +6,7 @@ import { MicButton } from '@/components/shared/MicButton';
 import { SpeakButton } from '@/components/shared/SpeakButton';
 import { MemoryAid } from '@/components/shared/MemoryAid';
 import { useMic, useSpeaker } from '@/hooks/useSpeech';
+import { looksLikeEcho } from '@/lib/match';
 import { useStore } from '@/store/useStore';
 import { CHUNK_BY_ID } from '@/data/chunks';
 import { REFLEX_BY_ID } from '@/data/reflex';
@@ -284,7 +285,10 @@ export function Review() {
             aiReady={false}
               onStart={() => void mic.start()}
               onStop={async () => {
-                await mic.finish();
+                const { text } = await mic.finish();
+                /* Bỏ đi nếu chỉ là micro thu lại giọng máy vừa đọc gợi ý —
+                 * hiện nó lên như "bạn đã nói" là nói dối người học. */
+                if (text && looksLikeEcho(text, face.cue)) mic.setTranscript('');
                 setFlipped(true);
               }}
               hint={mic.state === 'listening' ? 'Đang nghe…' : 'Nói rồi lật thẻ'}

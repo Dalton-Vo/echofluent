@@ -12,15 +12,19 @@ import {
   Eye,
   EyeOff,
   Target,
+  Sparkles,
 } from 'lucide-react';
 import { Card, Chip, ProgressBar, SectionHeader } from '@/components/ui/primitives';
 import { MicButton } from '@/components/shared/MicButton';
+import { PronunciationCard } from '@/components/shared/PronunciationCard';
+import { useAiCoach } from '@/hooks/useAiCoach';
+import type { Recording } from '@/lib/audio';
 import { SpeakButton } from '@/components/shared/SpeakButton';
 import { useMic, useSpeaker } from '@/hooks/useSpeech';
 import { useStore } from '@/store/useStore';
 import { SCENARIO_BY_ID } from '@/data/scenarios';
 import { getChunks } from '@/data/chunks';
-import { scoreAnswer, type MatchResult } from '@/lib/match';
+import { looksLikeEcho, scoreAnswer, type MatchResult } from '@/lib/match';
 import { FN_LABEL, type ScenarioTurn } from '@/types';
 import { asset, cn, gradientFor } from '@/lib/utils';
 
@@ -55,6 +59,8 @@ export function ScenarioPlayer() {
 
   const { say, stop } = useSpeaker();
   const mic = useMic();
+  const coach = useAiCoach();
+  const [recording, setRecording] = useState<Recording | null>(null);
   const threadRef = useRef<HTMLDivElement>(null);
   const spokenTurn = useRef<number>(-1);
 
@@ -91,14 +97,27 @@ export function ScenarioPlayer() {
       return;
     }
     setIdx(idx + 1);
+    setRecording(null);
+    coach.reset();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [idx, scenario, stop]);
 
   const submit = useCallback(
     async (skipped = false) => {
       if (!turn || turn.speaker !== 'you') return;
-      const { text } = await mic.finish();
-      const spoken = skipped ? '' : text.trim();
+      const { text, recording: rec } = await mic.finish();
+      setRecording(rec);
+
+      let spoken = skipped ? '' : text.trim();
+
+      /* Nhập vai là màn dính tiếng vọng nặng nhất: máy đọc lời của nhân vật
+       * kia ngay trước lượt của bạn, nên micro rất dễ ăn luôn câu đó. */
+      if (spoken && looksLikeEcho(spoken, turn.text)) spoken = '';
+
+      if (!spoken && !skipped && rec && coach.ready) {
+        spoken = (await coach.transcribe(rec)).trim();
+      }
+
       const r =
         skipped || !spoken ? null : scoreAnswer(spoken, turn.targets ?? [], turn.text);
       setResult(r);
@@ -108,7 +127,7 @@ export function ScenarioPlayer() {
       if (settings.autoPlay) window.setTimeout(() => say(turn.text), 300);
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [turn, log, say, settings.autoPlay],
+    [turn, log, say, settings.autoPlay, coach.ready],
   );
 
   /* Ghi nhận hoàn thành khi tới cuối */
@@ -357,6 +376,26 @@ export function ScenarioPlayer() {
             <p className="text-[15px] font-semibold leading-relaxed text-ink">{turn.text}</p>
             <p className="mt-1 text-xs text-muted">{turn.vi}</p>
           </div>
+
+          {/* Chấm phát âm bằng AI — nhập vai là chỗ đáng chấm nhất, vì đây là
+              lúc gần với nói thật nhất trong cả app. */}
+          {coach.ready && recording && !coach.report && !coach.busy && !coach.error && (
+            <button
+              type="button"
+              onClick={() => void coach.review(recording, turn.text)}
+              className="btn-violet w-full py-2.5 text-sm"
+            >
+              <Sparkles size={15} /> Chấm phát âm từng từ
+            </button>
+          )}
+          {(coach.busy || coach.report || coach.error) && (
+            <PronunciationCard
+              report={coach.report}
+              busy={coach.busy}
+              error={coach.error}
+              onRetry={recording ? () => void coach.review(recording, turn.text) : undefined}
+            />
+          )}
 
           {turn.alts && turn.alts.length > 0 && (
             <div>

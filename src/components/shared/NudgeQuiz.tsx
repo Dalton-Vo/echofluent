@@ -8,7 +8,7 @@ import { useAiCoach } from '@/hooks/useAiCoach';
 import { useNudge, popNotification } from '@/hooks/useNudge';
 import { useStore } from '@/store/useStore';
 import { REFLEX } from '@/data/reflex';
-import { scoreAnswer, type MatchResult } from '@/lib/match';
+import { looksLikeEcho, scoreAnswer, type MatchResult } from '@/lib/match';
 import type { Recording } from '@/lib/audio';
 import type { ReflexPrompt } from '@/types';
 import { cn, formatMs } from '@/lib/utils';
@@ -105,7 +105,19 @@ export function NudgeQuiz() {
       const { text, recording: rec } = await mic.finish();
       setRecording(rec);
 
-      const spoken = skipped ? '' : text.trim();
+      let spoken = skipped ? '' : text.trim();
+
+      /* Micro thu lại giọng máy vừa đọc câu hỏi thì không phải câu trả lời.
+       * Bảng hỏi bất chợt hay bật lên lúc đang cắm loa ngoài nên dính nhiều
+       * hơn hẳn màn luyện thường. */
+      if (spoken && looksLikeEcho(spoken, prompt.cue)) spoken = '';
+
+      /* Không có chữ nhưng có ghi âm → nhờ AI chép. Cứu Brave và Firefox,
+       * nơi nhận diện của trình duyệt chạy mà không bao giờ trả chữ. */
+      if (!spoken && !skipped && rec && coach.ready) {
+        spoken = (await coach.transcribe(rec)).trim();
+      }
+
       const r = skipped || !spoken ? null : scoreAnswer(spoken, prompt.targets, prompt.model);
       const reaction = performance.now() - openedAt.current;
 
@@ -125,7 +137,8 @@ export function NudgeQuiz() {
 
       say(prompt.model);
     },
-    [prompt, mic, log, ensureCards, markWeak, say],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [prompt, mic, log, ensureCards, markWeak, say, coach.ready],
   );
 
   if (!nudgeCfg.on) return null;

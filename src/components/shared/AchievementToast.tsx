@@ -1,9 +1,19 @@
 import { useEffect } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
 import { useStore } from '@/store/useStore';
 import { ACHIEVEMENTS } from '@/data/gamify';
 
-/** Bật lên khi mở khoá huy hiệu mới. Tự tắt sau 5 giây. */
+/**
+ * Bật lên khi mở khoá huy hiệu mới. Tự tắt sau 5 giây.
+ *
+ * Hoạt ảnh viết bằng Tailwind chứ không dùng thư viện. Trước đây chỗ này kéo
+ * theo cả framer-motion — khoảng 100KB nạp cho MỌI người mở app, để phục vụ
+ * đúng một cái toast mà phần lớn phiên học không hề thấy. Cả app còn lại vốn
+ * đã dùng hoạt ảnh Tailwind, nên đây là thư viện lạc lõng chứ không phải nền
+ * tảng chung.
+ *
+ * Đổi lại: mất hiệu ứng thoát mượt (không có AnimatePresence để giữ phần tử
+ * lại lúc gỡ bỏ). Với một cái toast tự tắt sau 5 giây thì không ai nhận ra.
+ */
 export function AchievementToast() {
   const ids = useStore((s) => s.newAchievements);
   const dismiss = useStore((s) => s.dismissAchievements);
@@ -16,34 +26,31 @@ export function AchievementToast() {
 
   const items = ids
     .map((id) => ACHIEVEMENTS.find((a) => a.id === id))
-    .filter(Boolean)
+    .filter((a): a is NonNullable<typeof a> => Boolean(a))
     .slice(0, 3);
+
+  if (!items.length) return null;
 
   return (
     <div className="pointer-events-none fixed bottom-24 left-1/2 z-50 flex -translate-x-1/2 flex-col items-center gap-2 lg:bottom-8">
-      <AnimatePresence>
-        {items.map((a) => (
-          <motion.button
-            key={a!.id}
-            type="button"
-            onClick={dismiss}
-            initial={{ opacity: 0, y: 24, scale: 0.92 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -12, scale: 0.96 }}
-            transition={{ type: 'spring', stiffness: 320, damping: 24 }}
-            className="pointer-events-auto flex items-center gap-3 rounded-2xl border border-mint/30 bg-surface px-4 py-3 shadow-[0_16px_50px_-16px_rgba(0,0,0,.8)]"
-          >
-            <span className="text-2xl">{a!.emoji}</span>
-            <span className="text-left">
-              <span className="block text-[11px] font-bold uppercase tracking-wider text-mint">
-                Mở khoá huy hiệu
-              </span>
-              <span className="block text-sm font-bold text-ink">{a!.title}</span>
-              <span className="block text-xs text-muted">{a!.desc}</span>
+      {items.map((a, i) => (
+        <button
+          key={a.id}
+          type="button"
+          onClick={dismiss}
+          style={{ animationDelay: `${i * 90}ms` }}
+          className="animate-stamp pointer-events-auto flex items-center gap-3 rounded-2xl border border-mint/30 bg-surface px-4 py-3 shadow-[0_16px_50px_-16px_rgba(0,0,0,.8)]"
+        >
+          <span className="text-2xl">{a.emoji}</span>
+          <span className="text-left">
+            <span className="block text-[11px] font-bold uppercase tracking-wider text-mint">
+              Mở khoá huy hiệu
             </span>
-          </motion.button>
-        ))}
-      </AnimatePresence>
+            <span className="block text-sm font-bold text-ink">{a.title}</span>
+            <span className="block text-xs text-muted">{a.desc}</span>
+          </span>
+        </button>
+      ))}
     </div>
   );
 }
