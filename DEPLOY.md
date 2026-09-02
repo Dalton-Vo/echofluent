@@ -29,8 +29,8 @@ cd worker
 npx wrangler login
 
 # 2. Đặt mật khẩu đồng bộ.
-#    Lấy mật khẩu từ trong app: Cài đặt → Mang tiến độ sang máy khác → nút "Sinh".
-#    Chép ra rồi dán vào đây khi được hỏi.
+#    CHÚ Ý: lệnh này chỉ nhận TÊN biến, không nhận giá trị.
+#    Gõ xong bấm Enter, nó hiện "Enter a secret value:" thì mới dán mật khẩu.
 npx wrangler secret put SYNC_SECRET
 
 # 3. (tuỳ chọn) Nếu muốn khoá Gemini nằm ở máy chủ thay vì trong trình duyệt
@@ -44,6 +44,39 @@ Lệnh cuối in ra địa chỉ dạng:
 
 ```
 https://echofluent-sync.<tên-của-bạn>.workers.dev
+```
+
+---
+
+## Ba cái bẫy hay vấp
+
+**Sai thư mục.** `wrangler` đọc `wrangler.jsonc` từ thư mục hiện tại. Đứng ở
+`~` mà chạy thì nó báo *"Required Worker name missing"*. Phải `cd` vào
+`echofluent/worker` trước.
+
+**Gõ mật khẩu chung một dòng với tên biến.** `wrangler secret put SYNC_SECRET
+abc123` sẽ báo *"Unknown argument: abc123"*. Lệnh chỉ nhận tên biến; giá trị
+nhập ở dòng hỏi tiếp theo. Muốn tránh mật khẩu lọt vào lịch sử lệnh thì đưa
+qua đường ống:
+
+```bash
+SECRET=$(openssl rand -base64 24)
+printf '%s' "$SECRET" | npx wrangler secret put SYNC_SECRET
+echo "Mật khẩu của bạn: $SECRET"
+```
+
+**Gõ thiếu chữ trong tên biến.** Đặt thành `SYNC_SECRE` thì lệnh vẫn báo thành
+công, Worker vẫn deploy được, nhưng đồng bộ lặng lẽ không chạy — và bạn chỉ
+phát hiện ra vào lúc đổi máy, tức là lúc đã mất tiến độ. Kiểm tra lại bằng:
+
+```bash
+npx wrangler secret list
+```
+
+Phải thấy đúng `SYNC_SECRET`. Lỡ đặt sai thì xoá đi:
+
+```bash
+npx wrangler secret delete SYNC_SECRE
 ```
 
 ---
