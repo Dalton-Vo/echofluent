@@ -123,6 +123,7 @@ export function ReflexDrill() {
   const promptReadyAt = useRef(0);
   const reactionRef = useRef(0);
   const sessionStart = useRef(0);
+  const finishingRef = useRef(false);
 
   const current = queue[idx];
 
@@ -263,7 +264,9 @@ export function ReflexDrill() {
 
   const finishAnswer = useCallback(
     async (skipped = false) => {
-      if (!current) return;
+      if (!current || finishingRef.current) return;
+      finishingRef.current = true;
+      try {
       stopSay();
       setTimerOn(false);
       setGrading(true);
@@ -294,12 +297,17 @@ export function ReflexDrill() {
       /* Micro thu lại chính giọng máy vừa đọc câu hỏi → không phải câu trả lời.
        * Chấm nó là vừa cho điểm oan, vừa ghi vào lịch sử một câu người học
        * chưa hề nói. Cho nói lại, và nói rõ vì sao. */
+      const attemptNo = tries + 1;
       if (!skipped && spoken && looksLikeEcho(spoken, current.cue)) {
-        setGrading(false);
-        askRetry(
-          'Micro thu lại giọng của máy chứ không phải giọng bạn. Đeo tai nghe, hoặc chờ máy đọc xong hẳn rồi hãy nói.',
-        );
-        return;
+        if (attemptNo < MAX_TRIES) {
+          setTries(attemptNo);
+          setGrading(false);
+          askRetry(
+            'Micro thu lại giọng của máy chứ không phải giọng bạn. Đeo tai nghe, hoặc chờ máy đọc xong hẳn rồi hãy nói.',
+          );
+          return;
+        }
+        spoken = '';
       }
 
       const r = skipped || !spoken ? null : scoreAnswer(spoken, current.targets, current.model);
@@ -311,8 +319,6 @@ export function ReflexDrill() {
        * phải bật ra bằng miệng thì cụm từ mới chuyển từ "hiểu" sang "nói
        * được". Nên sai thì quay lại nói tiếp, tối đa ba lượt. */
       const passed = !skipped && Boolean(r) && (r?.score ?? 0) >= PASS_SCORE;
-      const attemptNo = tries + 1;
-
       if (!passed && !skipped && attemptNo < MAX_TRIES) {
         setTries(attemptNo);
         setGrading(false);
@@ -369,6 +375,9 @@ export function ReflexDrill() {
       ]);
 
       if (settings.autoPlay) window.setTimeout(() => say(current.model), 350);
+      } finally {
+        finishingRef.current = false;
+      }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     // eslint-disable-next-line react-hooks/exhaustive-deps

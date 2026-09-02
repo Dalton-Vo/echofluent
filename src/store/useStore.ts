@@ -70,7 +70,8 @@ interface StoreState {
    * Cấu hình chấm phát âm bằng AI. `key` là khoá Google AI Studio của riêng
    * bạn — nó nằm trong localStorage của máy này thôi, không có trong mã nguồn
    * và không bao giờ được đẩy lên repo. Ai dùng Worker thì để trống `key` và
-   * điền `proxyUrl`, khi đó khoá nằm ở máy chủ, trình duyệt không giữ gì.
+   * điền `proxyUrl`; khi đó Google API key nằm ở máy chủ, còn `key` là mật khẩu
+   * Worker lưu cục bộ để chặn người lạ dùng ké proxy.
    */
   ai: {
     key: string;

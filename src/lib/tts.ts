@@ -17,7 +17,7 @@
  *  3. KHÔNG CHẶN. Câu hỏi phải hiện ra ngay; giọng tới sau cũng được.
  * ========================================================================== */
 
-import type { AiConfig } from '@/lib/gemini';
+import { aiRequestHeaders, type AiConfig } from '@/lib/gemini';
 
 const TTS_MODEL = 'gemini-2.5-flash-preview-tts';
 
@@ -220,14 +220,13 @@ export async function synthesize(
   if (cached) return cached;
 
   const proxy = cfg.proxyUrl.trim();
-  if (!proxy && !cfg.key.trim()) throw new TtsFailure('chua_cau_hinh');
+  if (!cfg.key.trim()) throw new TtsFailure('chua_cau_hinh');
 
   const url = proxy
     ? `${proxy.replace(/\/+$/, '')}/ai/${TTS_MODEL}`
     : `https://generativelanguage.googleapis.com/v1beta/models/${TTS_MODEL}:generateContent`;
 
-  const headers: Record<string, string> = { 'content-type': 'application/json' };
-  if (!proxy) headers['x-goog-api-key'] = cfg.key.trim();
+  const headers = aiRequestHeaders(cfg);
 
   let res: Response;
   try {

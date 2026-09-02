@@ -1,3 +1,5 @@
+import { AI_MODELS, authorized } from './security';
+
 /**
  * ============================================================================
  *  EchoFluent — máy chủ đồng bộ tiến độ
@@ -52,11 +54,14 @@ export default {
      * web. Trang này deploy công khai trên GitHub Pages, nên khoá nhúng thẳng
      * vào bundle là ai xem mã nguồn cũng lấy được và xài chùa hạn mức.
      *
-     * Chỉ nhận request từ đúng các origin đã khai trong ALLOWED_ORIGINS —
-     * không có bước này thì đây thành một cái proxy Gemini miễn phí cho cả
-     * Internet, và hạn mức sẽ bốc hơi trong vòng một ngày. */
+     * Bearer secret mới là lớp xác thực. Origin chỉ thu hẹp CORS cho trình duyệt;
+     * script bên ngoài có thể tự ghi Origin nên tuyệt đối không dùng nó thay
+     * mật khẩu. */
     if (url.pathname.startsWith('/ai/')) {
       if (request.method !== 'POST') return json({ error: 'method_khong_ho_tro' }, 405, cors);
+      if (!env.SYNC_SECRET || !(await authorized(request, env.SYNC_SECRET))) {
+        return json({ error: 'sai_mat_khau' }, 401, cors);
+      }
       if (!env.GEMINI_API_KEY) {
         return json(
           { error: 'chua_dat_khoa_ai', hint: 'Chạy: npx wrangler secret put GEMINI_API_KEY' },
@@ -64,14 +69,10 @@ export default {
           cors,
         );
       }
+      const model = url.pathname.slice('/ai/'.length);
+      if (!AI_MODELS.has(model)) return json({ error: 'model_khong_hop_le' }, 400, cors);
       if (!originAllowed(origin, env.ALLOWED_ORIGINS)) {
         return json({ error: 'origin_khong_duoc_phep' }, 403, cors);
-      }
-
-      const model = url.pathname.slice('/ai/'.length);
-      // Chặn ký tự lạ để không ai bẻ được đường dẫn sang endpoint khác của Google.
-      if (!/^[a-zA-Z0-9._-]{1,64}$/.test(model)) {
-        return json({ error: 'model_khong_hop_le' }, 400, cors);
       }
 
       const body = await request.text();
@@ -157,19 +158,6 @@ export default {
  * Băm cả hai trước để hai chuỗi luôn cùng độ dài — timingSafeEqual đòi hỏi vậy,
  * và làm thế thì độ dài mật khẩu cũng không bị lộ qua thời gian phản hồi.
  */
-async function authorized(request: Request, secret: string): Promise<boolean> {
-  const header = request.headers.get('Authorization') ?? '';
-  const given = header.startsWith('Bearer ') ? header.slice(7) : '';
-  if (!given) return false;
-
-  const enc = new TextEncoder();
-  const [a, b] = await Promise.all([
-    crypto.subtle.digest('SHA-256', enc.encode(given)),
-    crypto.subtle.digest('SHA-256', enc.encode(secret)),
-  ]);
-  return crypto.subtle.timingSafeEqual(a, b);
-}
-
 function originAllowed(origin: string | null, allowed: string): boolean {
   const list = allowed.split(',').map((s) => s.trim()).filter(Boolean);
   return Boolean(origin && list.includes(origin));

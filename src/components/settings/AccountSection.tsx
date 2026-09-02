@@ -163,7 +163,7 @@ npx wrangler deploy`}
               <div className="flex gap-2">
                 <input
                   id="acc-secret"
-                  type="text"
+                  type="password"
                   value={sync.secret}
                   onChange={(e) => setSync({ secret: e.target.value.trim() })}
                   placeholder="dán mật khẩu vừa đặt ở lệnh trên"

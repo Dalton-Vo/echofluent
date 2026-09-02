@@ -29,7 +29,6 @@ import { cn } from '@/lib/utils';
 
 const MODELS = [
   { id: 'gemini-3.5-flash', label: 'Gemini 3.5 Flash — cân bằng, khuyên dùng' },
-  { id: 'gemini-3.5-transcribe', label: 'Gemini 3.5 Transcribe — nghe chuẩn nhất' },
   { id: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash — ổn định, rẻ' },
   { id: 'gemini-3-flash-preview', label: 'Gemini 3 Flash — nhanh' },
 ];
@@ -76,7 +75,7 @@ export function AiSection() {
           <>
             <div>
               <label className="label" htmlFor="ai-key">
-                Khoá Google AI Studio
+                {ai.proxyUrl ? 'Mật khẩu Worker' : 'Khoá Google AI Studio'}
               </label>
               <div className="flex gap-2">
                 <input
@@ -84,7 +83,7 @@ export function AiSection() {
                   type={showKey ? 'text' : 'password'}
                   value={ai.key}
                   onChange={(e) => setAi({ key: e.target.value.trim() })}
-                  placeholder="AQ.… hoặc AIza…"
+                  placeholder={ai.proxyUrl ? 'cùng mật khẩu SYNC_SECRET' : 'AQ.… hoặc AIza…'}
                   spellCheck={false}
                   autoComplete="off"
                   className="input flex-1 font-mono text-xs"
@@ -99,7 +98,7 @@ export function AiSection() {
                 </button>
               </div>
               <p className="mt-1.5 text-xs leading-relaxed text-faint">
-                Lấy khoá miễn phí ở{' '}
+                {ai.proxyUrl ? 'Worker dùng mật khẩu này để chặn người lạ xài ké hạn mức.' : <>Lấy khoá ở{' '}
                 <a
                   href="https://aistudio.google.com/apikey"
                   target="_blank"
@@ -108,7 +107,7 @@ export function AiSection() {
                 >
                   aistudio.google.com/apikey <ExternalLink size={10} className="inline" />
                 </a>
-                . Gói miễn phí đủ cho vài trăm lượt chấm mỗi ngày.
+                . Hạn mức miễn phí thay đổi theo model và tài khoản.</>}
               </p>
             </div>
 
@@ -218,8 +217,8 @@ export function AiSection() {
               <div className="mt-2.5 space-y-2.5">
                 <p className="text-xs leading-relaxed text-faint">
                   Nếu bạn mở app trên máy dùng chung, đừng để khoá trong trình duyệt. Deploy
-                  Worker kèm khoá rồi điền địa chỉ vào đây và để trống ô khoá bên trên — khi đó
-                  trình duyệt không giữ gì cả.
+                  Worker kèm khoá rồi điền địa chỉ vào đây. Ô bên trên sẽ đổi thành mật khẩu
+                  Worker; dùng cùng giá trị đã đặt cho <code>SYNC_SECRET</code>.
                 </p>
                 <pre className="overflow-x-auto rounded-lg bg-bg/60 p-2.5 font-mono text-[11px] text-muted">
 {`cd worker

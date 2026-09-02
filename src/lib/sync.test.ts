@@ -1,5 +1,8 @@
-import { describe, expect, it } from 'vitest';
-import { buildSetupLink, readSetupLink, buildSyncCode, readSyncCode, randomSecret } from './sync';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { buildSetupLink, readSetupLink, buildSyncCode, readSyncCode, randomSecret, syncNow } from './sync';
+import { useStore } from '@/store/useStore';
+
+afterEach(() => vi.unstubAllGlobals());
 
 /* Link cài đặt là thứ người dùng mở trên điện thoại — hỏng cái này thì phải gõ
  * tay cả địa chỉ lẫn mật khẩu trên màn hình nhỏ. */
@@ -73,6 +76,20 @@ describe('mã đồng bộ — thứ đóng vai "đăng nhập"', () => {
   it('không sinh mã khi còn thiếu địa chỉ hoặc mật khẩu', () => {
     expect(buildSyncCode('', secret)).toBe('');
     expect(buildSyncCode(url, '  ')).toBe('');
+  });
+
+  it('không sinh mã chứa mật khẩu cho địa chỉ http', () => {
+    expect(buildSyncCode('http://x.dev', secret)).toBe('');
+  });
+
+  it('không gửi mật khẩu qua mạng khi cấu hình cũ còn địa chỉ http', async () => {
+    const fetchSpy = vi.fn();
+    vi.stubGlobal('fetch', fetchSpy);
+    useStore.setState({ sync: { url: 'http://x.dev', secret } });
+
+    const result = await syncNow();
+    expect(result.status).toBe('error');
+    expect(fetchSpy).not.toHaveBeenCalled();
   });
 
   it('mật khẩu sinh ra đủ dài và mỗi lần một khác', () => {

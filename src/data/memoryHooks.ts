@@ -64,8 +64,8 @@ export const MEMORY_HOOKS: Record<string, MemoryHook> = {
     pitfall: 'Không dùng khi người ta ĐÃ hỏi ý bạn — nghe thừa. Chỉ dùng khi bạn tự xen ý vào.',
   },
   c012: {
-    hook: '"argue" ở đây không phải cãi nhau — nó là "lập luận rằng". Dấu hiệu bạn có lý lẽ đằng sau.',
-    pitfall: 'Phải có lý do theo sau. Nói "I\'d argue that…" rồi không giải thích là mất uy tín.',
+    hook: 'Mẫu nêu vấn đề thông dụng nhất: “I think” làm nhận định bớt tuyệt đối và dễ nghe hơn.',
+    pitfall: 'Nêu đúng vấn đề cụ thể ngay sau “is”; tránh dừng ở “I think the problem is…” quá lâu.',
   },
   c013: {
     hook: 'Vũ khí mạnh nhất của dev có kinh nghiệm: kinh nghiệm không cãi được.',
@@ -153,8 +153,8 @@ export const MEMORY_HOOKS: Record<string, MemoryHook> = {
     contrast: '"I hear you" không có nghĩa là đồng ý — nhiều người Việt hiểu nhầm chỗ này.',
   },
   c037: {
-    hook: 'Câu thoát hiểm khi tranh luận đã đi vòng tròn. Giữ được quan hệ, kết thúc được cuộc cãi.',
-    pitfall: 'Đừng dùng quá sớm — nói ra là coi như đóng cửa thảo luận.',
+    hook: 'Tạm hoãn cuộc bàn bạc mà không bác ý ai; “come back to” nghĩa là quay lại xử lý sau.',
+    pitfall: 'Nếu việc quan trọng, nên kèm một mốc cụ thể như “after lunch” hoặc “tomorrow morning”.',
   },
 
   /* ---------------- làm rõ ---------------- */
@@ -518,8 +518,8 @@ export const MEMORY_HOOKS: Record<string, MemoryHook> = {
     hook: 'Mẫu hỏi đổi cỡ. Thay "smaller" bằng "bigger/another colour" là dùng được khắp nơi.',
   },
   c146: {
-    hook: '"mix-up" = sự lẫn lộn. Danh từ này đổ lỗi cho tình huống, không cho người.',
-    contrast: 'Nhẹ hơn "You made a mistake" rất nhiều — nhân viên sẽ hợp tác hơn hẳn.',
+    hook: '“I think” làm lời báo nhầm đơn nhẹ và lịch sự hơn việc quy lỗi thẳng cho nhân viên.',
+    contrast: 'Nhẹ hơn “You got my order wrong” — nói vấn đề trước rồi nêu món bạn đã gọi.',
   },
   c147: {
     hook: 'Đưa ra HAI lựa chọn (hoàn tiền hoặc đổi) làm người ta dễ đồng ý hơn là đòi một thứ.',

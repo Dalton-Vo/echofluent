@@ -46,9 +46,19 @@ function endpoint(url: string): string {
   return `${url.replace(/\/+$/, '')}/state`;
 }
 
+function secureSyncUrl(url: string): boolean {
+  try {
+    const parsed = new URL(url.trim());
+    return parsed.protocol === 'https:' && Boolean(parsed.hostname);
+  } catch {
+    return false;
+  }
+}
+
 /** Kiểm tra máy chủ đồng bộ có sống không — không cần mật khẩu */
 export async function pingSync(url: string): Promise<SyncResult> {
   if (!url.trim()) return fail('Chưa điền địa chỉ máy chủ.');
+  if (!secureSyncUrl(url)) return fail('Địa chỉ đồng bộ phải bắt đầu bằng https://.');
   try {
     const res = await fetch(`${url.replace(/\/+$/, '')}/health`);
     if (!res.ok) return fail(`Máy chủ trả về lỗi ${res.status}.`);
@@ -72,6 +82,7 @@ export async function syncNow(): Promise<SyncResult> {
   if (!sync.url.trim() || !sync.secret.trim()) {
     return { status: 'off', message: 'Chưa bật đồng bộ.', at: Date.now() };
   }
+  if (!secureSyncUrl(sync.url)) return fail('Địa chỉ đồng bộ phải bắt đầu bằng https://.');
 
   const headers = {
     Authorization: `Bearer ${sync.secret}`,
@@ -136,6 +147,7 @@ export async function syncNow(): Promise<SyncResult> {
 export async function wipeRemote(): Promise<SyncResult> {
   const { sync } = useStore.getState();
   if (!sync.url.trim() || !sync.secret.trim()) return fail('Chưa bật đồng bộ.');
+  if (!secureSyncUrl(sync.url)) return fail('Địa chỉ đồng bộ phải bắt đầu bằng https://.');
   try {
     const res = await fetch(endpoint(sync.url), {
       method: 'DELETE',
@@ -162,6 +174,7 @@ function fail(message: string): SyncResult {
  * ⚠️ Link này chứa mật khẩu đồng bộ. Chỉ tự gửi cho chính mình.
  */
 export function buildSetupLink(baseUrl: string, url: string, secret: string): string {
+  if (!secureSyncUrl(url) || !secret.trim()) return '';
   const payload = btoa(
     encodeURIComponent(JSON.stringify({ u: url, s: secret })),
   );
@@ -175,6 +188,7 @@ export function readSetupLink(hash: string): { url: string; secret: string } | n
   try {
     const parsed = JSON.parse(decodeURIComponent(atob(m[1]))) as { u?: string; s?: string };
     if (!parsed.u || !parsed.s) return null;
+    if (!secureSyncUrl(parsed.u)) return null;
     return { url: parsed.u, secret: parsed.s };
   } catch {
     return null;
@@ -214,6 +228,7 @@ function fromUrlSafe(s: string): string {
 /** Gói địa chỉ Worker và mật khẩu thành một mã để mang sang máy khác */
 export function buildSyncCode(url: string, secret: string): string {
   if (!url.trim() || !secret.trim()) return '';
+  if (!secureSyncUrl(url)) return '';
   const packed = btoa(encodeURIComponent(JSON.stringify({ u: url.trim(), s: secret.trim() })));
   return CODE_PREFIX + toUrlSafe(packed);
 }
@@ -234,7 +249,7 @@ export function readSyncCode(code: string): { url: string; secret: string } | nu
     ) as { u?: string; s?: string };
     if (!parsed.u || !parsed.s) return null;
     // Chỉ nhận https — mã này mang theo mật khẩu, gửi qua http là lộ.
-    if (!/^https:\/\//i.test(parsed.u)) return null;
+    if (!secureSyncUrl(parsed.u)) return null;
     return { url: parsed.u, secret: parsed.s };
   } catch {
     return null;

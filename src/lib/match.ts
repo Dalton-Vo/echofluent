@@ -192,5 +192,6 @@ export function looksLikeEcho(spoken: string, promptText: string): boolean {
    * vọng còn hơn vứt oan câu trả lời thật của người ta. */
   if (said.size < 4) return false;
 
-  return (said.size - outside) / said.size >= 0.8;
+  const overlap = said.size - outside;
+  return overlap / said.size >= 0.8 && overlap / prompt.size >= 0.75;
 }

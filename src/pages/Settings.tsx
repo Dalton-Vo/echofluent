@@ -16,6 +16,7 @@ import { AiSection } from '@/components/settings/AiSection';
 import { NudgeSection } from '@/components/settings/NudgeSection';
 import { MicCheckSection } from '@/components/settings/MicCheckSection';
 import { useStore } from '@/store/useStore';
+import { sanitizeBackup } from '@/lib/backup';
 import { getEnglishVoices, onVoicesReady, speak } from '@/lib/speech';
 import { CHUNK_BY_ID } from '@/data/chunks';
 import { REFLEX_BY_ID } from '@/data/reflex';
@@ -100,14 +101,7 @@ export function Settings() {
 
     // Bỏ thông tin đăng nhập đồng bộ ra khỏi file sao lưu. File này người ta hay
     // gửi qua Zalo, lưu Drive, đính kèm email — mật khẩu máy chủ không được đi theo.
-    let cleaned = raw;
-    try {
-      const parsed = JSON.parse(raw);
-      if (parsed?.state?.sync) parsed.state.sync = { url: '', secret: '' };
-      cleaned = JSON.stringify(parsed);
-    } catch {
-      /* không đọc được thì xuất nguyên trạng còn hơn không xuất được */
-    }
+    const cleaned = sanitizeBackup(raw);
 
     const blob = new Blob([cleaned], { type: 'application/json' });
     const url = URL.createObjectURL(blob);

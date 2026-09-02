@@ -37,11 +37,12 @@ afterEach(() => {
 });
 
 describe('isAiReady', () => {
-  it('cần ít nhất khoá hoặc địa chỉ proxy', () => {
+  it('luôn cần một bí mật: khoá Google hoặc mật khẩu Worker', () => {
     expect(isAiReady({ key: '', proxyUrl: '', model: '' })).toBe(false);
     expect(isAiReady({ key: '  ', proxyUrl: '  ', model: '' })).toBe(false);
     expect(isAiReady({ key: 'k', proxyUrl: '', model: '' })).toBe(true);
-    expect(isAiReady({ key: '', proxyUrl: 'https://w.dev', model: '' })).toBe(true);
+    expect(isAiReady({ key: '', proxyUrl: 'https://w.dev', model: '' })).toBe(false);
+    expect(isAiReady({ key: 'worker-secret', proxyUrl: 'https://w.dev', model: '' })).toBe(true);
   });
 });
 
@@ -219,12 +220,12 @@ describe('đường đi của khoá API', () => {
     expect((init.headers as Record<string, string>)['x-goog-api-key']).toBe('test-key');
   });
 
-  it('đi qua Worker thì TUYỆT ĐỐI không gửi khoá lên — khoá nằm ở máy chủ', async () => {
+  it('đi qua Worker thì dùng mật khẩu làm bearer token, không gửi như khoá Google', async () => {
     const spy = mockReply({ transcript: '', overall: 0, pronunciation: 0, fluency: 0, intonation: 0, completeness: 0, words: [], focus: [], summary: '' });
     vi.stubGlobal('fetch', spy);
 
     await reviewPronunciation(
-      { key: 'khong-duoc-gui-di', proxyUrl: 'https://w.dev/', model: 'gemini-3.5-flash' },
+      { key: 'worker-secret', proxyUrl: 'https://w.dev/', model: 'gemini-3.5-flash' },
       'B',
       'audio/wav',
       'x',
@@ -233,7 +234,7 @@ describe('đường đi của khoá API', () => {
     const [url, init] = spy.mock.calls[0];
     expect(url).toBe('https://w.dev/ai/gemini-3.5-flash');
     expect(init.headers).not.toHaveProperty('x-goog-api-key');
-    expect(JSON.stringify(init)).not.toContain('khong-duoc-gui-di');
+    expect((init.headers as Record<string, string>).Authorization).toBe('Bearer worker-secret');
   });
 });
 

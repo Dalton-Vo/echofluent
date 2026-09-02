@@ -151,6 +151,10 @@ describe('looksLikeEcho — chặn micro thu lại giọng máy', () => {
     expect(looksLikeEcho('I like living here because it is close to work', cue)).toBe(false);
   });
 
+  it('KHÔNG chặn câu trả lời ngắn dùng phần lớn từ có trong câu hỏi', () => {
+    expect(looksLikeEcho('I do like living here', cue)).toBe(false);
+  });
+
   it('không gục với chuỗi rỗng', () => {
     expect(looksLikeEcho('', cue)).toBe(false);
     expect(looksLikeEcho('hello', '')).toBe(false);

@@ -11,7 +11,8 @@
  *  trả về điểm cho TỪNG TỪ kèm IPA đúng / IPA nghe được, giống cách ELSA chấm.
  *
  *  Về khoá API — hai đường, chọn một:
- *    • Qua Worker (khuyên dùng): khoá nằm ở máy chủ, trang web không giữ gì cả.
+ *    • Qua Worker (khuyên dùng): khoá Google nằm ở máy chủ; trình duyệt chỉ giữ
+ *      mật khẩu Worker để người lạ không dùng ké proxy.
  *    • Khoá dán thẳng: chỉ nằm trong localStorage của máy bạn, tiện khi học một
  *      mình. KHÔNG BAO GIỜ đưa khoá vào mã nguồn — repo này công khai, đẩy khoá
  *      lên là Google thu hồi ngay và ai cũng xài ké được.
@@ -22,15 +23,22 @@ const API_ROOT = 'https://generativelanguage.googleapis.com/v1beta/models';
 export const DEFAULT_MODEL = 'gemini-3.5-flash';
 
 export interface AiConfig {
-  /** Khoá Google AI Studio, chỉ lưu trong trình duyệt */
+  /** Khoá Google khi gọi thẳng, hoặc mật khẩu Worker khi dùng proxy */
   key: string;
-  /** Địa chỉ Worker đứng giữa; có cái này thì không cần khoá ở trình duyệt */
+  /** Địa chỉ Worker đứng giữa; Google API key vẫn chỉ nằm trên Worker */
   proxyUrl: string;
   model: string;
 }
 
 export function isAiReady(cfg: AiConfig): boolean {
-  return Boolean(cfg.proxyUrl.trim() || cfg.key.trim());
+  return Boolean(cfg.key.trim());
+}
+
+export function aiRequestHeaders(cfg: AiConfig): Record<string, string> {
+  const headers: Record<string, string> = { 'content-type': 'application/json' };
+  if (cfg.proxyUrl.trim()) headers.Authorization = `Bearer ${cfg.key.trim()}`;
+  else headers['x-goog-api-key'] = cfg.key.trim();
+  return headers;
 }
 
 /* --------------------------- kiểu dữ liệu kết quả --------------------------- */
@@ -213,9 +221,7 @@ async function callGemini(
     ? `${proxy.replace(/\/+$/, '')}/ai/${model}`
     : `${API_ROOT}/${model}:generateContent`;
 
-  const headers: Record<string, string> = { 'content-type': 'application/json' };
-  // Chỉ đính khoá khi gọi thẳng Google. Đi qua Worker thì khoá nằm ở máy chủ.
-  if (!proxy) headers['x-goog-api-key'] = cfg.key.trim();
+  const headers = aiRequestHeaders(cfg);
 
   let res: Response;
   try {

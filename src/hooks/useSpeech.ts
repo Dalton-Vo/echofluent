@@ -21,6 +21,7 @@ import {
   type RecorderHandle,
 } from '@/lib/audio';
 import { DEFAULT_AI_VOICE, playClip, stopAiVoice, synthesize } from '@/lib/tts';
+import { createAutoStopController } from '@/lib/autoStop';
 
 /**
  * Đọc câu tiếng Anh.
@@ -44,7 +45,7 @@ export function useSpeaker() {
   /** Tăng mỗi lần đọc — đoạn tiếng về muộn của lần cũ sẽ bị bỏ */
   const runId = useRef(0);
 
-  const aiVoiceOn = ai.enabled && ai.voice && Boolean(ai.key.trim() || ai.proxyUrl.trim());
+  const aiVoiceOn = ai.enabled && ai.voice && Boolean(ai.key.trim());
 
   useEffect(() => {
     mounted.current = true;
@@ -213,6 +214,7 @@ export function useMic() {
     if (state === 'starting' || state === 'listening') return;
     setTranscript('');
     setResumed(false);
+    setSttSilent(false);
     resumeCount.current = 0;
     setState('starting');
 
@@ -298,6 +300,7 @@ export function useMic() {
     teardown();
     setTranscript('');
     setResumed(false);
+    setSttSilent(false);
     setState((s) => (s === 'unsupported' ? s : 'idle'));
   }, [teardown]);
 
@@ -383,48 +386,22 @@ export function useAutoStop(
 ) {
   const { threshold = 0.07, silenceMs = 1600, maxMs = 25_000 } = opts;
 
-  const spoke = useRef(false);
-  const quietSince = useRef(0);
-  const startedAt = useRef(0);
-  const fired = useRef(false);
   const doneRef = useRef(onDone);
   doneRef.current = onDone;
+  const controller = useMemo(
+    () => createAutoStopController(() => doneRef.current(), { threshold, silenceMs, maxMs }),
+    [threshold, silenceMs, maxMs],
+  );
 
   useEffect(() => {
-    if (!active) {
-      spoke.current = false;
-      fired.current = false;
-      quietSince.current = 0;
-      startedAt.current = performance.now();
-      return;
-    }
-    if (!startedAt.current) startedAt.current = performance.now();
-  }, [active]);
+    if (active) controller.start();
+    else controller.stop();
+    return () => controller.stop();
+  }, [active, controller]);
 
   useEffect(() => {
-    if (!active || fired.current) return;
-    const now = performance.now();
+    if (active) controller.update(level);
+  }, [level, active, controller]);
 
-    // Lưới an toàn: micro kẹt mở thì cũng phải chốt, đừng thu vô tận.
-    if (startedAt.current && now - startedAt.current > maxMs) {
-      fired.current = true;
-      doneRef.current();
-      return;
-    }
-
-    if (level > threshold) {
-      spoke.current = true;
-      quietSince.current = 0;
-      return;
-    }
-    if (!spoke.current) return;
-
-    if (!quietSince.current) quietSince.current = now;
-    else if (now - quietSince.current >= silenceMs) {
-      fired.current = true;
-      doneRef.current();
-    }
-  }, [level, active, threshold, silenceMs, maxMs]);
-
-  return { spoke: spoke.current };
+  return {};
 }
