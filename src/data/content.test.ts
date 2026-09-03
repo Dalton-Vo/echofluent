@@ -400,3 +400,122 @@ describe('Nhiệm vụ, huy hiệu, cấp độ', () => {
     }
   });
 });
+
+/* ============================================================================
+ *  MẢNG NÓI BỰA — kiểm định riêng
+ *
+ *  Nhóm nội dung này có một rủi ro mà các nhóm khác không có: dạy đúng câu mà
+ *  sai chỗ dùng thì hại hơn là không dạy. Nên ở đây test không chỉ canh dữ
+ *  liệu có đủ trường — nó canh đúng cái quyết định thiết kế:
+ *
+ *    · mọi cụm `raw` phải nói rõ nói được ở đâu, tránh ở đâu;
+ *    · thang độ nóng phải có đủ ba bậc, để người học thấy được ĐƯỜNG LÊN
+ *      chứ không chỉ thấy bậc trên cùng;
+ *    · và tuyệt đối không có từ miệt thị nào lọt vào.
+ * ========================================================================== */
+
+const RAW_CHUNKS = CHUNKS.filter((c) => c.register === 'raw');
+
+describe('Nói bựa — độ nóng và chỗ dùng', () => {
+  it('có đủ nội dung để thành một mảng thật, không phải vài câu cho có', () => {
+    expect(RAW_CHUNKS.length).toBeGreaterThanOrEqual(30);
+  });
+
+  it('mọi cụm bựa đều nói rõ ĐỘ NÓNG và CHỖ DÙNG', () => {
+    // Đây là test quan trọng nhất của cả nhóm. Một câu chửi không kèm "nói
+    // được với ai" là một cái bẫy đặt sẵn cho người học.
+    const bad: string[] = [];
+    for (const c of RAW_CHUNKS) {
+      if (c.heat !== 1 && c.heat !== 2 && c.heat !== 3) bad.push(`${c.id} thiếu heat`);
+      if (!c.warn || c.warn.trim().length < 20) bad.push(`${c.id} thiếu warn (hoặc quá sơ sài)`);
+    }
+    expect(bad).toEqual([]);
+  });
+
+  it('cụm không phải `raw` thì không được mang độ nóng', () => {
+    // Giữ cho một chiếc chip 🔥 trên giao diện luôn có đúng một ý nghĩa.
+    const leaked = CHUNKS.filter((c) => c.register !== 'raw' && (c.heat || c.warn)).map((c) => c.id);
+    expect(leaked).toEqual([]);
+  });
+
+  it('phủ đủ ba bậc của thang độ nóng', () => {
+    // Chỉ dạy bậc 3 thì người học chỉ có một cái búa. Cái đáng học là biết
+    // chọn bậc nào cho hoàn cảnh nào.
+    for (const heat of [1, 2, 3] as const) {
+      const n = RAW_CHUNKS.filter((c) => c.heat === heat).length;
+      expect(n, `bậc ${heat} quá ít`).toBeGreaterThanOrEqual(6);
+    }
+  });
+
+  it('bốn nhóm chức năng mới đều có nội dung thật', () => {
+    for (const fn of ['venting', 'banter', 'emphasis', 'dismissal'] as const) {
+      expect(CHUNKS.filter((c) => c.fn === fn).length, `nhóm ${fn}`).toBeGreaterThanOrEqual(8);
+    }
+  });
+
+  it('mảng bựa cũng chạy được ở các màn khác, không chỉ nằm trong thư viện', () => {
+    // Người dùng chọn "chỉ là bộ lọc trong mode cũ" — nên nội dung phải thật
+    // sự có mặt ở Phản xạ, Luyện nghe, Nhập vai và Nói đuổi.
+    expect(REFLEX.filter((r) => r.id >= 'r098').length, 'câu phản xạ').toBeGreaterThanOrEqual(15);
+    expect(LISTENING.filter((l) => l.id >= 'l086').length, 'bài nghe').toBeGreaterThanOrEqual(15);
+    expect(SCENARIOS.filter((s) => s.id === 's13' || s.id === 's14').length).toBe(2);
+    expect(SHADOW_PACKS.filter((p) => p.id === 'sh11' || p.id === 'sh12').length).toBe(2);
+  });
+});
+
+describe('Nói bựa — lằn ranh đỏ', () => {
+  /*
+   * Danh sách chặn, mã hoá base64 để kho mã nguồn không chứa sẵn một danh sách
+   * từ miệt thị đọc được bằng mắt. Xem nội dung:
+   *
+   *   node -e "console.log(Buffer.from(process.argv[1],'base64').toString())" <chuỗi>
+   *
+   * Đây là dây bẫy, không phải bộ lọc đầy đủ — không có danh sách nào đầy đủ.
+   * Việc của nó là chặn đúng thứ dễ lọt nhất: một mẻ nội dung sinh thêm sau
+   * này vô tình kéo theo từ miệt thị, và không ai kịp đọc hết trước khi commit.
+   */
+  const BLOCKED = Buffer.from(
+    'bmlnZ2VyLG5pZ2dhLGZhZ2dvdCxmYWcsa2lrZSxzcGljLGNoaW5rLHdldGJhY2ssZ29vayxwYWtpLHRyYW5ueSxyZXRhcmQscmV0YXJkZWQsY3VudA==',
+    'base64',
+  )
+    .toString('utf8')
+    .split(',');
+
+  /** Gom hết chữ tiếng Anh lẫn tiếng Việt của toàn bộ dữ liệu về một chỗ */
+  function allText(): { id: string; text: string }[] {
+    const out: { id: string; text: string }[] = [];
+    for (const c of CHUNKS) out.push({ id: c.id, text: [c.en, c.vi, c.example, c.exampleVi, c.say, c.warn].join(' ') });
+    for (const [id, h] of Object.entries(MEMORY_HOOKS))
+      out.push({ id, text: [h.hook, h.pitfall, h.contrast].join(' ') });
+    for (const r of REFLEX) out.push({ id: r.id, text: [r.cue, r.cueVi, r.model, r.modelVi, ...r.targets].join(' ') });
+    for (const l of LISTENING)
+      out.push({ id: l.id, text: [l.spoken, l.written, l.vi, l.note, ...l.options].join(' ') });
+    for (const s of SCENARIOS) {
+      const turns = s.turns.flatMap((t) => [t.text, t.vi, t.task ?? '', ...(t.alts ?? []).flatMap((a) => [a.text, a.note])]);
+      out.push({ id: s.id, text: [s.title, s.context, s.contextVi, ...turns].join(' ') });
+    }
+    for (const p of SHADOW_PACKS)
+      out.push({ id: p.id, text: p.lines.flatMap((x) => [x.text, x.vi]).join(' ') });
+    return out;
+  }
+
+  it('không có từ miệt thị nào trong toàn bộ nội dung', () => {
+    // Chửi thề làm bạn nghe thô. Từ miệt thị làm bạn mất bạn và mất việc —
+    // hai thứ đó không cùng một thang, nên app này chỉ dạy thứ nhất.
+    const hits: string[] = [];
+    for (const { id, text } of allText()) {
+      const hay = normalize(text);
+      for (const w of BLOCKED) {
+        if (new RegExp(`\\b${w}\\b`).test(hay)) hits.push(`${id}: "${w}"`);
+      }
+    }
+    expect(hits).toEqual([]);
+  });
+
+  it('dây bẫy thật sự bắt được — nếu không thì nó chỉ đang luôn xanh', () => {
+    // Một test an toàn không bao giờ fail là một test đã hỏng mà không ai biết.
+    const w = BLOCKED[0];
+    expect(new RegExp(`\\b${w}\\b`).test(normalize(`this is a ${w} example`))).toBe(true);
+    expect(BLOCKED.length).toBeGreaterThanOrEqual(10);
+  });
+});

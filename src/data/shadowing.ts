@@ -351,6 +351,85 @@ export const SHADOW_PACKS: ShadowPack[] = [
       { text: "Alright, / *talk* soon!", vi: 'Rồi, nói chuyện sau nhé!' },
     ],
   },
+
+  /* ==========================================================================
+   *  Hai bộ dưới đây luyện thứ mà các bộ trên không chạm tới: NHỊP CỦA CẢM XÚC.
+   *
+   *  Nhịp một câu bực bội không giống nhịp một câu báo cáo. Nó dồn cục, trọng
+   *  âm rơi liên tiếp, rồi hụt xuống ở cuối. Nhại đúng chữ mà sai nhịp thì
+   *  người nghe vẫn thấy bạn đang đọc, không phải đang nói.
+   * ========================================================================== */
+  {
+    id: 'sh11',
+    title: 'Ranting about a bug',
+    titleVi: 'Xả một tràng về con bug',
+    emoji: '😤',
+    domain: 'tech',
+    level: 'B2',
+    baseRate: 1.0,
+    lines: [
+      {
+        text: "Right, / I've been on this *bloody* thing / for *four* hours.",
+        vi: 'Rồi, tôi ngồi với cái của nợ này bốn tiếng rồi.',
+      },
+      {
+        text: "It works on my *machine*, / it works on *staging*, / and then *production* just dies.",
+        vi: 'Máy tôi chạy, staging chạy, rồi production thì chết ngắc.',
+      },
+      {
+        text: "*No* error, / *no* stack trace, / *nothing* in the logs. / For fuck's *sake*.",
+        vi: 'Không lỗi, không stack trace, log trống trơn. Trời đất ơi.',
+      },
+      {
+        text: "And *of course* / it only happens / when *real* users are on it.",
+        vi: 'Và tất nhiên là nó chỉ xảy ra khi có người dùng thật.',
+      },
+      {
+        text: "Honestly, / this is *such* a pain in the *ass*.",
+        vi: 'Thật lòng mà nói, cái này phiền vãi ra.',
+      },
+      {
+        text: "Right. / *Screw* it. / I'm adding *logging* everywhere / and going *home*.",
+        vi: 'Rồi. Kệ. Tôi rải log khắp nơi rồi về nhà.',
+      },
+    ],
+  },
+  {
+    id: 'sh12',
+    title: 'Banter with mates',
+    titleVi: 'Cà khịa với hội bạn',
+    emoji: '😏',
+    domain: 'social',
+    level: 'B2',
+    baseRate: 1.05,
+    lines: [
+      {
+        text: "*Look* at this guy, / turning up *twenty* minutes late.",
+        vi: 'Nhìn ông này kìa, tới trễ hai mươi phút.',
+      },
+      {
+        text: "*Nice* one, *genius*. / We already *ordered* without you.",
+        vi: 'Giỏi lắm thiên tài. Tụi tôi gọi đồ trước rồi.',
+      },
+      {
+        text: "*What*? / The *traffic*? / Mate, you say that / *every* single time.",
+        vi: 'Gì cơ? Kẹt xe á? Ông ơi, lần nào ông cũng nói câu đó.',
+      },
+      {
+        text: "*Yeah*, right. / Like *hell* it was the traffic.",
+        vi: 'Ừ, tin ông mới lạ. Kẹt xe cái gì mà kẹt xe.',
+      },
+      {
+        text: "Alright, alright, / *shut* up and *sit* down, / you *muppet*.",
+        vi: 'Thôi thôi, im đi mà ngồi xuống, đồ hậu đậu.',
+      },
+      {
+        text: "*First* round's on *you*, / obviously. / That's the *rule*.",
+        vi: 'Vại đầu ông trả, rõ rồi. Luật là thế.',
+      },
+    ],
+  },
+
 ];
 
 export const SHADOW_BY_ID = new Map(SHADOW_PACKS.map((p) => [p.id, p]));

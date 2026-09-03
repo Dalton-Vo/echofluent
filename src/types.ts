@@ -16,6 +16,19 @@ export const DOMAIN_LABEL: Record<Domain, string> = {
 
 /* ---------------- Chunk (cụm từ phản xạ) ---------------- */
 
+/**
+ * Độ "nóng" của một cụm nói bựa.
+ *
+ * Không phải xếp hạng cho vui — người học cần biết mình đang cầm thứ gì. Cùng
+ * là "chán quá" nhưng `damn` nói trước mặt khách hàng thì qua, còn `fuck` thì
+ * mất hợp đồng. Ranh giới nằm ở đây, không nằm ở nghĩa.
+ *
+ *   1 — damn, crap, hell. Phim chiếu giờ vàng vẫn nói.
+ *   2 — shit, piss off, screw. Bạn bè thoải mái, chỗ làm thì tuỳ văn hoá.
+ *   3 — họ nhà f-word. Chỉ với người thân thiết, và phải chắc họ cũng nói vậy.
+ */
+export type Heat = 1 | 2 | 3;
+
 export interface Chunk {
   id: string;
   /** Cụm tiếng Anh cần thuộc lòng tới mức bật ra không cần nghĩ */
@@ -28,9 +41,17 @@ export interface Chunk {
   level: Level;
   example: string;
   exampleVi: string;
-  register: 'casual' | 'neutral' | 'formal';
+  register: 'casual' | 'neutral' | 'formal' | 'raw';
   /** Mẹo phát âm / nuốt âm khi người bản xứ nói nhanh */
   say?: string;
+  /** Chỉ có ở cụm `raw`. Xem chú thích của Heat. */
+  heat?: Heat;
+  /**
+   * Chỉ có ở cụm `raw`, và BẮT BUỘC với chúng — có test canh.
+   * Nói được với ai, tuyệt đối tránh chỗ nào. Dạy một câu chửi mà không dạy
+   * chỗ dùng thì không phải dạy, là gài bẫy người học.
+   */
+  warn?: string;
 }
 
 export type FunctionTag =
@@ -52,7 +73,12 @@ export type FunctionTag =
   | 'travel'
   | 'health'
   | 'phone'
-  | 'closing';
+  | 'closing'
+  /* --- bốn nhóm dưới đây thuộc mảng nói bựa --- */
+  | 'venting'
+  | 'banter'
+  | 'emphasis'
+  | 'dismissal';
 
 export const FN_LABEL: Record<FunctionTag, string> = {
   thinking: 'Câu giờ khi nghĩ',
@@ -74,6 +100,10 @@ export const FN_LABEL: Record<FunctionTag, string> = {
   health: 'Sức khoẻ, khẩn cấp',
   phone: 'Điện thoại / online meeting',
   closing: 'Kết thúc hội thoại',
+  venting: 'Xả bực, văng tục',
+  banter: 'Cà khịa thân mật',
+  emphasis: 'Nhấn mạnh kiểu đường phố',
+  dismissal: 'Dẹp đi, kệ nó',
 };
 
 /* ---------------- Reflex drill ---------------- */

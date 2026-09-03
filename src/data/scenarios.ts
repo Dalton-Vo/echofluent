@@ -1374,6 +1374,230 @@ export const SCENARIOS: Scenario[] = [
       },
     ],
   },
+
+  /* ==========================================================================
+   *  s13 — CHƠI GAME ONLINE VỚI BẠN NƯỚC NGOÀI
+   *
+   *  Đây là môi trường tiếng Anh bựa dày đặc nhất mà một lập trình viên Việt
+   *  Nam thật sự bước vào. Nhịp nhanh, câu cụt, chửi thề liên tục — và gần như
+   *  toàn bộ là ĐÙA. Bài này luyện đúng một kỹ năng: đáp trả mà không đơ.
+   * ========================================================================== */
+  {
+    id: 's13',
+    title: 'Ranked match with mates',
+    titleVi: 'Chơi rank với hội bạn',
+    emoji: '🎮',
+    domain: 'social',
+    level: 'B2',
+    minutes: 6,
+    context:
+      "You're three rounds into a ranked game with two friends from work. Voice chat is on. Nobody is being polite, and nobody means anything by it.",
+    contextVi:
+      'Bạn đang chơi rank ván thứ ba với hai người bạn cùng công ty. Voice chat đang bật. Không ai lịch sự, và cũng không ai có ý gì xấu cả.',
+    chunkIds: ['c210', 'c211', 'c231', 'c245', 'c196', 'c208', 'c252'],
+    turns: [
+      {
+        speaker: 'them',
+        text: "Oh my god, you walked straight into that. Get rekt, mate.",
+        vi: 'Trời ơi, ông đi thẳng vào bẫy luôn. Ăn hành nhé.',
+      },
+      {
+        speaker: 'you',
+        text: "My bad, my bad. I thought you were covering the left side, you muppet.",
+        vi: 'Lỗi tôi, lỗi tôi. Tôi tưởng ông giữ bên trái chứ, đồ hậu đậu.',
+        task: 'Nhận lỗi NHANH rồi đẩy ngược lại. Im lặng ở đây là hỏng — trong voice chat, im lặng bị coi là giận thật.',
+        targets: ['my bad', 'thought you were', 'covering', 'muppet'],
+        alts: [
+          {
+            text: "Yeah yeah, my bad. You could've called it out though.",
+            note: '"you could\'ve called it out" = đáng lẽ ông phải hô lên. Đẩy lại nhẹ nhàng, rất tự nhiên.',
+          },
+          {
+            text: "Shut up, you idiot, you died first last round.",
+            note: 'Đáp trả bằng cách bới lại chuyện cũ — đúng chất bạn bè. Giữ giọng cười.',
+          },
+        ],
+      },
+      {
+        speaker: 'them',
+        text: "Alright, last round. If we lose this one I'm uninstalling.",
+        vi: 'Rồi, ván cuối. Thua ván này là tôi gỡ game luôn.',
+      },
+      {
+        speaker: 'you',
+        text: "You say that every single week. Come on, focus — I'll take the left this time.",
+        vi: 'Tuần nào ông cũng nói câu đó. Thôi tập trung đi — lần này tôi giữ bên trái.',
+        task: 'Cà khịa thói quen của bạn rồi chốt một câu hành động. Đây là nhịp banter chuẩn: trêu xong thì đóng góp.',
+        targets: ['you say that', 'every single week', 'focus', 'take the left'],
+        alts: [
+          {
+            text: "Yeah, right. You said that last week and you're still here.",
+            note: '"Yeah, right" giọng kéo dài = không tin một chữ nào. Cụm mỉa mai dùng nhiều nhất.',
+          },
+          {
+            text: "Don't be a dick, we've won two already. Just play.",
+            note: 'Nghe nặng nhưng trong ngữ cảnh này chỉ là "thôi đừng làm quá".',
+          },
+        ],
+      },
+      {
+        speaker: 'them',
+        text: "WAIT. Did you just clutch that? Three of them?!",
+        vi: 'KHOAN. Ông vừa gánh cả ván đó à? Ba đứa luôn?!',
+      },
+      {
+        speaker: 'you',
+        text: "Fuck yeah I did! Holy shit, I didn't think that would work.",
+        vi: 'Đã quá! Trời ơi, tôi cũng không nghĩ là ăn được.',
+        task: 'Ăn mừng KHÔNG kiềm chế. Đây là chỗ duy nhất trong app bạn được phép hét — và đúng ngữ cảnh thì nó tự nhiên.',
+        targets: ['fuck yeah', 'holy shit', "didn't think", 'work'],
+        alts: [
+          {
+            text: "No fucking way! Did you see that? Did you SEE that?",
+            note: 'Lặp lại câu hỏi và nhấn mạnh chữ thứ hai — cách ăn mừng rất bản xứ.',
+          },
+          {
+            text: "Get rekt! That's what happens when I take the left.",
+            note: 'Trả lại đúng câu bạn bị trêu ở đầu ván. Vòng tròn khép lại, rất được lòng.',
+          },
+        ],
+      },
+      {
+        speaker: 'them',
+        text: "Okay that was actually insane. Same time tomorrow?",
+        vi: 'Ừ cái đó điên thật. Mai giờ này nữa nhé?',
+      },
+      {
+        speaker: 'you',
+        text: "Hell yes, count me in. I'm knackered though — I need to sleep at some point.",
+        vi: 'Chắc chắn rồi, tính tôi một suất. Mà tôi rã rời rồi — cũng phải ngủ lúc nào chứ.',
+        task: 'Nhận lời + than mệt. Kết thúc bằng một câu người thật, đừng kết thúc bằng "OK bye".',
+        targets: ['hell yes', 'count me in', 'knackered', 'sleep'],
+        alts: [
+          {
+            text: "Yeah, go on then. But not this late, I'm dying here.",
+            note: '"go on then" = thôi được rồi. Rất Anh, rất tự nhiên khi miễn cưỡng đồng ý.',
+          },
+          {
+            text: "Absolutely. Same time, and this time you take the left.",
+            note: 'Nhận lời kèm điều kiện đùa — giữ mạch cà khịa tới câu cuối.',
+          },
+        ],
+      },
+    ],
+  },
+
+  /* ==========================================================================
+   *  s14 — ĐI NHẬU SAU GIỜ LÀM
+   *
+   *  Đây là bài kiểm tra thật sự: ở văn phòng bạn nói tiếng Anh ổn, nhưng ra
+   *  quán thì đăng ký ngôn ngữ đổi hoàn toàn. Đồng nghiệp bắt đầu than sếp,
+   *  chửi dự án, và nếu bạn vẫn nói giọng họp thì bạn ngồi ngoài cuộc.
+   * ========================================================================== */
+  {
+    id: 's14',
+    title: 'Pub after work',
+    titleVi: 'Ra quán sau giờ làm',
+    emoji: '🍺',
+    domain: 'social',
+    level: 'B2',
+    minutes: 7,
+    context:
+      "Friday, 6pm, a noisy pub with two colleagues you get on with. The project has been rough. This is where people say what they actually think.",
+    contextVi:
+      'Thứ Sáu, 6 giờ tối, một quán ồn ào với hai đồng nghiệp bạn khá hợp. Dự án vừa qua rất mệt. Đây là chỗ người ta nói thật lòng.',
+    chunkIds: ['c260', 'c256', 'c190', 'c187', 'c226', 'c254', 'c259'],
+    turns: [
+      {
+        speaker: 'them',
+        text: "Right, first round's on me. What are you having?",
+        vi: 'Rồi, vại đầu tôi mời. Ông uống gì?',
+      },
+      {
+        speaker: 'you',
+        text: "Cheers, mate. Just a pint of whatever's on tap — I'm dying for a beer after this week.",
+        vi: 'Cảm ơn ông. Cho tôi vại bia tươi gì cũng được — sau cái tuần này tôi thèm bia chết đi được.',
+        task: 'Nhận lời mời gọn gàng + than một câu. Đừng hỏi lại menu, người ta đang đứng chờ ở quầy.',
+        targets: ['cheers', 'pint', 'dying for a beer', 'this week'],
+        alts: [
+          {
+            text: "Cheers! Same as you, I'm not fussy. I'm knackered.",
+            note: '"I\'m not fussy" = tôi không kén. Câu cứu khi bạn không biết gọi gì.',
+          },
+          {
+            text: "Nice one. A pint would be brilliant, thanks.",
+            note: '"Nice one" = cảm ơn kiểu thân mật, dùng suốt ở Anh.',
+          },
+        ],
+      },
+      {
+        speaker: 'them',
+        text: "So. Be honest. What did you actually think of that deadline they gave us?",
+        vi: 'Rồi. Nói thật đi. Ông nghĩ sao về cái deadline họ đưa?',
+      },
+      {
+        speaker: 'you',
+        text: "Honestly? It was bullshit. Nobody could have hit that date, and they knew it.",
+        vi: 'Thật lòng á? Vô lý hết sức. Chẳng ai làm kịp ngày đó, và họ biết thừa.',
+        task: 'Đây là lúc CHUYỂN ĐĂNG KÝ. Trả lời kiểu họp ("it was challenging") là tự loại mình khỏi cuộc trò chuyện.',
+        targets: ['honestly', 'bullshit', 'nobody could have', 'they knew'],
+        alts: [
+          {
+            text: "It was a joke, mate. Two weeks for three months of work.",
+            note: '"It was a joke" = trò cười. Cách chê sạch mà vẫn mạnh.',
+          },
+          {
+            text: "Total bullshit. And the worst part is nobody pushed back.",
+            note: '"the worst part is" mở ra ý thứ hai — cách kéo dài câu chuyện thay vì đáp cụt.',
+          },
+        ],
+      },
+      {
+        speaker: 'them',
+        text: "Yeah. Honestly I nearly said something in the meeting, but I bottled it.",
+        vi: 'Ừ. Thật ra trong họp tôi suýt nói, nhưng lại chùn.',
+      },
+      {
+        speaker: 'you',
+        text: "Don't beat yourself up, I did the same. That whole meeting was a pain in the ass.",
+        vi: 'Đừng tự trách, tôi cũng vậy mà. Cả cuộc họp đó mệt vãi ra.',
+        task: 'Đứng về phía họ trước, rồi mới nói tiếp. Đồng cảm là thứ giữ cuộc trò chuyện sống.',
+        targets: ['beat yourself up', 'i did the same', 'pain in the ass', 'meeting'],
+        alts: [
+          {
+            text: "Same, mate. I sat there thinking it and said nothing.",
+            note: '"Same, mate" — hai chữ, đồng cảm ngay. Ngắn mà hiệu quả hơn cả câu dài.',
+          },
+          {
+            text: "Who gives a shit now, it's Friday. Next round's mine.",
+            note: 'Đổi chủ đề bằng cách gạt nó đi — rất thường gặp ở quán.',
+          },
+        ],
+      },
+      {
+        speaker: 'them',
+        text: "Anyway — enough about work. Are you around next weekend?",
+        vi: 'Thôi — đủ chuyện công việc rồi. Cuối tuần sau ông rảnh không?',
+      },
+      {
+        speaker: 'you',
+        text: "Yeah, I should be. What have you got in mind? I'm up for pretty much anything.",
+        vi: 'Ừ, chắc rảnh. Ông tính gì? Tôi kiểu gì cũng chơi.',
+        task: 'Nhận lời mở, chưa cam kết cụ thể. Hỏi ngược để họ nói tiếp.',
+        targets: ['i should be', 'what have you got', 'up for', 'anything'],
+        alts: [
+          {
+            text: "Should be, yeah. Go on, what's the plan?",
+            note: '"Go on" = nói tiếp đi. Một cách giục rất tự nhiên và thân thiện.',
+          },
+          {
+            text: "Yeah, nothing planned. As long as it's not a 6am start.",
+            note: 'Nhận lời kèm một câu đùa về điều kiện — giữ nhịp vui.',
+          },
+        ],
+      },
+    ],
+  },
 ];
 
 export const SCENARIO_BY_ID = new Map(SCENARIOS.map((s) => [s.id, s]));

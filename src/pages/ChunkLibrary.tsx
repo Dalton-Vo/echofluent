@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Library, Search, Plus, Check, Volume2, Sparkles } from 'lucide-react';
+import { Library, Search, Plus, Check, Volume2, Sparkles, Flame, ShieldAlert } from 'lucide-react';
 import { Card, Chip, ProgressBar, SectionHeader } from '@/components/ui/primitives';
 import { SpeakButton } from '@/components/shared/SpeakButton';
 import { MemoryAid } from '@/components/shared/MemoryAid';
@@ -8,7 +8,7 @@ import { useStore } from '@/store/useStore';
 import { ipaOf } from '@/data/phonemes';
 import { CHUNKS } from '@/data/chunks';
 import { isMastered } from '@/lib/srs';
-import { DOMAIN_LABEL, FN_LABEL, type Domain, type FunctionTag } from '@/types';
+import { DOMAIN_LABEL, FN_LABEL, type Domain, type FunctionTag, type Heat } from '@/types';
 import { cn } from '@/lib/utils';
 
 /* ============================================================================
@@ -21,7 +21,11 @@ const FN_GROUPS: { label: string; fns: FunctionTag[] }[] = [
   { label: 'Bày tỏ quan điểm', fns: ['opinion', 'agree', 'disagree', 'softening'] },
   { label: 'Trong công việc', fns: ['status', 'feedback', 'planning', 'problem', 'asking', 'phone'] },
   { label: 'Ngoài đời sống', fns: ['smalltalk', 'service', 'travel', 'health', 'closing'] },
+  { label: 'Nói bựa', fns: ['venting', 'banter', 'emphasis', 'dismissal'] },
 ];
+
+/** Số cụm bựa — tính một lần, không đổi trong suốt vòng đời app */
+const RAW_COUNT = CHUNKS.filter((c) => c.register === 'raw').length;
 
 export function ChunkLibrary() {
   const srs = useStore((s) => s.srs);
@@ -32,6 +36,11 @@ export function ChunkLibrary() {
   const [fn, setFn] = useState<FunctionTag | 'all'>('all');
   const [domain, setDomain] = useState<Domain | 'all'>('all');
   const [onlyNew, setOnlyNew] = useState(false);
+  /* Bộ lọc riêng của mảng nói bựa. Tách khỏi bộ lọc chức năng vì độ nóng là
+   * một CHIỀU KHÁC: "cà khịa mức 1" và "cà khịa mức 3" là hai câu khác nhau
+   * hoàn toàn về chỗ dùng, dù cùng một chức năng. */
+  const [rawOnly, setRawOnly] = useState(false);
+  const [heat, setHeat] = useState<Heat | 'all'>('all');
 
   const list = useMemo(
     () =>
@@ -39,6 +48,9 @@ export function ChunkLibrary() {
         if (fn !== 'all' && c.fn !== fn) return false;
         if (domain !== 'all' && c.domain !== domain) return false;
         if (onlyNew && srs[c.id]) return false;
+        if (rawOnly && c.register !== 'raw') return false;
+        // Chọn một mức nóng thì hiển nhiên chỉ còn cụm bựa
+        if (heat !== 'all' && c.heat !== heat) return false;
         if (!q.trim()) return true;
         const n = q.toLowerCase();
         return (
@@ -47,7 +59,7 @@ export function ChunkLibrary() {
           c.example.toLowerCase().includes(n)
         );
       }),
-    [q, fn, domain, onlyNew, srs],
+    [q, fn, domain, onlyNew, rawOnly, heat, srs],
   );
 
   const inDeck = CHUNKS.filter((c) => srs[c.id]).length;
@@ -113,7 +125,39 @@ export function ChunkLibrary() {
             <Sparkles size={14} className="mr-1 inline" />
             Chỉ cụm chưa học
           </button>
+          <button
+            type="button"
+            onClick={() => {
+              const next = !rawOnly;
+              setRawOnly(next);
+              if (!next) setHeat('all');
+            }}
+            aria-pressed={rawOnly}
+            className={cn(
+              'rounded-xl border px-3.5 py-2.5 text-sm font-semibold transition',
+              rawOnly
+                ? 'border-rose/50 bg-rose/10 text-rose'
+                : 'border-line bg-raised/40 text-muted hover:text-ink',
+            )}
+          >
+            <Flame size={14} className="mr-1 inline" />
+            Chỉ cụm bựa ({RAW_COUNT})
+          </button>
         </div>
+
+        {rawOnly && (
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span className="mr-1 text-xs font-semibold text-faint">Độ nóng</span>
+            <FilterPill active={heat === 'all'} onClick={() => setHeat('all')} tone="rose">
+              Mọi mức
+            </FilterPill>
+            {([1, 2, 3] as Heat[]).map((h) => (
+              <FilterPill key={h} active={heat === h} onClick={() => setHeat(h)} tone="rose">
+                {'🔥'.repeat(h)} {HEAT_LABEL[h]}
+              </FilterPill>
+            ))}
+          </div>
+        )}
 
         <div className="flex flex-wrap gap-1.5">
           <FilterPill active={fn === 'all'} onClick={() => setFn('all')}>
@@ -145,6 +189,8 @@ export function ChunkLibrary() {
         </div>
       </div>
 
+      {rawOnly && <RedLineCard />}
+
       <SectionHeader title={`${list.length} cụm`} desc="Bấm loa để nghe câu ví dụ, rồi nhại lại thành tiếng." />
 
       <div className="grid gap-2.5">
@@ -161,6 +207,11 @@ export function ChunkLibrary() {
                     <Chip>{c.level}</Chip>
                     {c.register === 'casual' && <Chip tone="amber">thân mật</Chip>}
                     {c.register === 'formal' && <Chip tone="sky">trang trọng</Chip>}
+                    {c.register === 'raw' && c.heat && (
+                      <Chip tone="rose">
+                        {'🔥'.repeat(c.heat)} {HEAT_LABEL[c.heat]}
+                      </Chip>
+                    )}
                     {done && (
                       <Chip tone="mint">
                         <Check size={11} /> đã thuộc
@@ -187,6 +238,15 @@ export function ChunkLibrary() {
                     </div>
                     <p className="mt-1 text-xs text-faint">{c.exampleVi}</p>
                   </div>
+
+                  {/* Chỗ dùng được, chỗ không — với cụm bựa đây là phần quan
+                    * trọng hơn cả nghĩa, nên nó nằm TRƯỚC mẹo phát âm. */}
+                  {c.warn && (
+                    <p className="mt-2 flex items-start gap-1.5 rounded-xl border border-rose/25 bg-rose/[.06] p-2.5 text-xs leading-relaxed text-muted">
+                      <ShieldAlert size={13} className="mt-0.5 shrink-0 text-rose" />
+                      <span>{c.warn}</span>
+                    </p>
+                  )}
 
                   {c.say && (
                     <p className="mt-2 flex items-start gap-1.5 text-xs leading-relaxed text-muted">
@@ -248,19 +308,20 @@ function FilterPill({
   active: boolean;
   onClick: () => void;
   children: React.ReactNode;
-  tone?: 'violet' | 'sky';
+  tone?: 'violet' | 'sky' | 'rose';
 }) {
+  const activeTone = {
+    violet: 'border-violet/50 bg-violet/10 text-violet',
+    sky: 'border-sky/50 bg-sky/10 text-sky',
+    rose: 'border-rose/50 bg-rose/10 text-rose',
+  }[tone];
   return (
     <button
       type="button"
       onClick={onClick}
       className={cn(
         'rounded-lg border px-2.5 py-1.5 text-xs font-semibold transition',
-        active
-          ? tone === 'violet'
-            ? 'border-violet/50 bg-violet/10 text-violet'
-            : 'border-sky/50 bg-sky/10 text-sky'
-          : 'border-line bg-raised/40 text-muted hover:text-ink',
+        active ? activeTone : 'border-line bg-raised/40 text-muted hover:text-ink',
       )}
     >
       {children}
@@ -286,4 +347,52 @@ function IpaLine({ text }: { text: string }) {
 
   if (!ipa) return null;
   return <p className="mt-0.5 font-mono text-xs text-faint">/{ipa}/</p>;
+}
+
+/* ------------------------------ mảng nói bựa ------------------------------ */
+
+const HEAT_LABEL: Record<Heat, string> = {
+  1: 'nhẹ',
+  2: 'vừa',
+  3: 'nặng',
+};
+
+/**
+ * Thẻ hiện khi bật bộ lọc cụm bựa.
+ *
+ * Nó trả lời câu hỏi mà người học chắc chắn sẽ có khi thấy một đống từ bậy:
+ * "vậy có gì tôi tuyệt đối không được nói?". Không trả lời thì họ tự suy ra
+ * rằng mọi từ nặng đều nằm chung một thang — và đó là suy luận sai nguy hiểm
+ * nhất trong cả mảng này.
+ */
+function RedLineCard() {
+  return (
+    <Card className="border-rose/25 bg-rose/[.05] !p-4">
+      <div className="flex items-start gap-3">
+        <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-rose/12 text-rose">
+          <ShieldAlert size={18} />
+        </div>
+        <div className="space-y-2 text-sm leading-relaxed text-muted">
+          <p className="font-bold text-ink">Lằn ranh đỏ — thứ không có trong app này</p>
+          <p>
+            Ở đây có chửi thề, nhưng <strong className="text-ink">không có từ miệt thị</strong> nhắm
+            vào chủng tộc, giới tính hay xu hướng tính dục. Đó là quyết định có chủ đích, và có test
+            trong mã nguồn canh để nội dung mới không vô tình kéo chúng vào.
+          </p>
+          <p>
+            Lý do không phải là né tránh, mà vì{' '}
+            <strong className="text-ink">hai thứ đó không cùng một thang</strong>. Chửi thề sai chỗ
+            làm bạn nghe thô, và người ta quên sau một tuần. Một từ miệt thị nói ra một lần là mất
+            bạn, mất việc, và không có đường lùi. Nghe thấy chúng thì hiểu ngay đó là mức khác hẳn —
+            đừng học theo, kể cả khi người bản xứ quanh bạn có nói.
+          </p>
+          <p className="text-xs text-faint">
+            Về ba mức 🔥: chọn mức nào là quyền của bạn, nhưng hãy đọc dòng đỏ dưới mỗi cụm trước.
+            Nguy hiểm thật sự không nằm ở chỗ không biết chửi — mà ở chỗ biết một câu rồi mang ra
+            dùng sai phòng.
+          </p>
+        </div>
+      </div>
+    </Card>
+  );
 }

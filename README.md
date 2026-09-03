@@ -57,7 +57,7 @@ Mở <http://localhost:5180>.
 npm run check
 ```
 
-Chạy một lượt: kiểm tra kiểu dữ liệu → 150 test → build. Workflow deploy cũng chạy đúng
+Chạy một lượt: kiểm tra kiểu dữ liệu → 208 test → build. Workflow deploy cũng chạy đúng
 bộ này trước khi đẩy lên, nên nội dung sai thì không lên được mạng.
 
 ---
@@ -104,17 +104,37 @@ Hầu hết app dạy bạn **biết thêm**. App này ép bạn **bật ra nhan
 Tất cả viết tay, nhắm thẳng vào bối cảnh của bạn — dev mobile/game, họp bằng tiếng Anh,
 sống và xoay xở bằng tiếng Anh:
 
-- **147 cụm phản xạ** sắp theo *chức năng giao tiếp* (câu giờ, phản đối lịch sự, làm rõ,
+- **223 cụm phản xạ** sắp theo *chức năng giao tiếp* (câu giờ, phản đối lịch sự, làm rõ,
   giành lượt nói…) chứ không theo chủ đề từ vựng
-- **61 câu hỏi phản xạ** trải đều 4 kiểu bài
-- **54 bài luyện nghe** về nuốt âm, nối âm, rút gọn, âm yếu, số má, cụm động từ, thành ngữ
-- **12 tình huống nhập vai** — 107 lượt thoại, trong đó **54 lượt bạn phải nói**, kèm
-  **108 cách nói thay thế** để không bị đóng khung vào một câu duy nhất
-- **10 bộ shadowing** (63 câu) đã đánh dấu sẵn trọng âm và nhóm nghĩa
-- **147 mẹo nhớ** — mỗi cụm một cái móc để bám: nghĩa đen, lỗi hay mắc, cụm dễ nhầm
+- **83 câu hỏi phản xạ** trải đều 4 kiểu bài
+- **74 bài luyện nghe** về nuốt âm, nối âm, rút gọn, âm yếu, số má, cụm động từ, thành ngữ
+- **14 tình huống nhập vai** — 123 lượt thoại, trong đó **62 lượt bạn phải nói**, kèm
+  **124 cách nói thay thế** để không bị đóng khung vào một câu duy nhất
+- **12 bộ shadowing** (73 câu) đã đánh dấu sẵn trọng âm và nhóm nghĩa
+- **223 mẹo nhớ** — mỗi cụm một cái móc để bám: nghĩa đen, lỗi hay mắc, cụm dễ nhầm
 - **14 huy hiệu** và nhiệm vụ tuần đổi mới mỗi thứ Hai
 
-Toàn bộ dự án có **150 test**. Riêng phần nội dung có 41 phép kiểm tra chất lượng thật
+### Mảng nói bựa
+
+**47 cụm** tiếng Anh mà người bản xứ thật sự dùng khi không có ai chấm điểm — chửi thề,
+cà khịa bạn bè, xả bực, dẹp chuyện. Bật bằng nút **🔥 Chỉ cụm bựa** trong Thư viện cụm;
+nội dung cũng tự chảy vào Phản xạ, Luyện nghe, Nhập vai và Nói đuổi.
+
+Mỗi cụm mang một **thang độ nóng** ba bậc (15 nhẹ · 17 vừa · 15 nặng) và một dòng nói rõ
+*nói được với ai, tuyệt đối tránh chỗ nào*. Cái nguy hiểm không phải là không biết chửi —
+mà là biết một câu rồi mang ra dùng sai phòng.
+
+Trọng tâm không phải danh sách từ bậy mà là **ngữ pháp của chửi thề**: `fucking` chèn làm
+trạng từ (`it's fucking brilliant` là lời KHEN), `the fuck` chèn vào câu hỏi,
+`abso-fucking-lutely` chèn vào giữa một từ, và bẫy Anh–Mỹ `pissed` (Mỹ = cáu, Anh = xỉn).
+Phần luyện nghe nhắm đúng chỗ khó nhất: chửi thề là nơi nuốt âm nặng nhất — `for fuck's
+sake` dính thành một tiếng, `piece of shit` thành “peesa shit”.
+
+**Không có từ miệt thị** nhắm vào chủng tộc, giới tính hay xu hướng tính dục, và có test
+quét chặn để nội dung thêm sau này không vô tình kéo chúng vào. Chửi thề sai chỗ làm bạn
+nghe thô; một từ miệt thị làm bạn mất bạn và mất việc — hai thứ đó không cùng một thang.
+
+Toàn bộ dự án có **208 test**. Riêng phần nội dung có 48 phép kiểm tra chất lượng thật
 sự, chứ không chỉ kiểm tra cú pháp:
 
 - câu ví dụ phải thật sự chứa cụm đang dạy
@@ -122,6 +142,8 @@ sự, chứ không chỉ kiểm tra cú pháp:
 - đáp án đúng của bài nghe không được nhận ra chỉ nhờ độ dài (bẫy kinh điển của trắc nghiệm)
 - mọi cụm mà tình huống tham chiếu đều phải tồn tại
 - mọi cụm đều phải có mẹo nhớ
+- mọi cụm bựa đều phải nói rõ độ nóng và chỗ dùng được — thiếu là fail
+- không một từ miệt thị nào lọt vào bất kỳ tệp nội dung nào
 
 Muốn thêm nội dung? Mọi file trong `src/data/` đều có chú thích tiếng Việt và cấu trúc rõ
 ràng — thêm một object là xong.
@@ -158,12 +180,12 @@ Lần đầu vào bài nói, trình duyệt sẽ xin quyền micro — bấm **A
 ```
 src/
 ├── data/           ← toàn bộ nội dung học, sửa thoải mái
-│   ├── chunks.ts       147 cụm phản xạ
-│   ├── memoryHooks.ts  147 mẹo nhớ đi kèm
-│   ├── reflex.ts       61 câu hỏi phản xạ
-│   ├── listening.ts    54 bài nghe
-│   ├── scenarios.ts    12 tình huống nhập vai
-│   ├── shadowing.ts    10 bộ shadowing (63 câu)
+│   ├── chunks.ts       223 cụm phản xạ (47 cụm bựa có thang độ nóng)
+│   ├── memoryHooks.ts  223 mẹo nhớ đi kèm
+│   ├── reflex.ts       83 câu hỏi phản xạ
+│   ├── listening.ts    74 bài nghe
+│   ├── scenarios.ts    14 tình huống nhập vai
+│   ├── shadowing.ts    12 bộ shadowing (73 câu)
 │   └── gamify.ts       nhiệm vụ, huy hiệu, hệ thống cấp độ
 ├── lib/
 │   ├── speech.ts       bọc Web Speech API (đọc + nghe)
@@ -264,5 +286,6 @@ Vài điểm đáng biết:
 
 - **[HUONG_DAN.md](HUONG_DAN.md)** — phương pháp học, lộ trình 12 tuần, cách dùng cho hiệu quả.
   **Đọc file này trước khi học buổi đầu tiên.**
-- **[IMAGE_PROMPTS.md](IMAGE_PROMPTS.md)** — prompt sinh ảnh minh hoạ cho 12 tình huống,
-  kèm đúng tên file và thư mục. App chạy tốt kể cả khi không có ảnh nào.
+- **[IMAGE_PROMPTS.md](IMAGE_PROMPTS.md)** — prompt sinh ảnh minh hoạ cho 12 tình huống
+  đầu, kèm đúng tên file và thư mục. Hai tình huống của mảng nói bựa chưa có prompt; app
+  tự vẽ gradient thay thế, và chạy tốt kể cả khi không có ảnh nào.

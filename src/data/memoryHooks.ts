@@ -624,4 +624,327 @@ export const MEMORY_HOOKS: Record<string, MemoryHook> = {
   c185: {
     hook: 'Lời tạm biệt ngắn nhất mà vẫn ấm. Hai chữ, dùng được mọi lúc.',
   },
+
+  /* ---------------- nói bựa: xả bực ---------------- */
+  c186: {
+    hook: 'Nghĩa đen: "vì lợi ích của sự giao hợp" — vô nghĩa hoàn toàn. Đó chính là điểm: nó là tiếng kêu, không phải câu có nghĩa.',
+    pitfall: 'Đừng cố dịch từng chữ rồi ghép lại. Học nguyên khối như học một tiếng thở dài.',
+    contrast: 'Bản sạch cùng nhịp: "oh for goodness\' sake", "oh for crying out loud". Nhịp y hệt, độ nóng bằng không.',
+  },
+  c187: {
+    hook: 'Cái gì làm bạn phải cúi xuống nhặt đi nhặt lại thì nó đau chỗ đó. Hình ảnh rất dễ nhớ.',
+    contrast: 'Thang giảm dần: pain in the ass (2) → pain in the backside (1) → pain in the neck (0, họp nói được).',
+  },
+  c188: {
+    hook: '"a load of" = cả một xe tải. Người Anh đo sự nhảm nhí bằng đơn vị chuyên chở.',
+    contrast: 'Cùng khuôn, tăng dần: a load of crap → a load of rubbish (Anh, sạch) → a load of bullshit → a load of bollocks.',
+  },
+  c189: {
+    hook: '"done with X" = xong với X, không còn dính dáng nữa. Thêm "so fucking" là đẩy nó thành lời tuyên bố.',
+    pitfall: 'Khác hẳn "I\'m done" (= tôi làm xong rồi). Có "with" là bỏ cuộc, không có "with" là hoàn thành.',
+  },
+  c190: {
+    hook: 'Nghĩa đen là phân bò. Người bản xứ dùng nó cho MỌI thứ vô lý, không riêng lời nói dối.',
+    pitfall: 'Người Việt hay nói "you are bullshit" — sai. Phải là "that\'s bullshit" (việc) hoặc "you\'re full of shit" (người).',
+  },
+  c191: {
+    hook: 'Cụm bựa an toàn nhất để tập đầu tiên. Nói được ở gần như mọi chỗ mà vẫn ra đúng cảm xúc.',
+    contrast: '"Damn it" là bực. "Damn" đứng một mình trước tính từ lại là khen: "damn good".',
+  },
+  c192: {
+    hook: 'Nói về đồ vật thì "piece of shit" = rác rưởi. Đây là câu chửi đồ vật phổ biến nhất tiếng Anh.',
+    pitfall: 'Tuyệt đối không dùng cho người. Với đồ vật là bực bội; với người là xúc phạm nhân phẩm.',
+  },
+  c193: {
+    hook: 'Sạch hoàn toàn mà cảm xúc không kém gì câu bậy. Đây là cụm để dành cho lúc có mặt sếp.',
+    contrast: 'Cùng nghĩa: "I\'m at my wit\'s end", "I\'m about to lose it".',
+  },
+  c194: {
+    hook: 'Chữ "right now" mới là chỗ mang cảm xúc — nó nói "ngay lúc này, trong tình huống này, mà ông đùa được à".',
+    pitfall: 'Bỏ "right now" đi thì câu thành ngạc nhiên bình thường, mất hết sức nặng.',
+  },
+  c195: {
+    hook: '"nuts" = hạt, cũng có nghĩa điên. "Drive someone nuts" = lái ai đó tới chỗ điên.',
+    contrast: 'Cùng khuôn: drive me crazy / drive me up the wall / drive me round the bend (Anh).',
+  },
+  c196: {
+    hook: 'Hai từ bậy đứng cạnh nhau. Đây gần như là mức trần của bực bội thường ngày.',
+    pitfall: 'Nói ra là kết thúc cuộc trò chuyện, không phải mở đầu. Người nghe hiểu bạn đang bỏ đi.',
+  },
+  c197: {
+    hook: 'Khuôn "what the ___ is going on" là bộ khung, còn chỗ trống là nơi bạn chọn độ nóng: heck (0) → hell (1) → fuck (3).',
+    pitfall: 'Người Việt hay chỉ học một mức rồi dùng ở mọi chỗ. Học cả cái khung mới là học đúng.',
+  },
+  c198: {
+    hook: '"arsed" = buồn động vào. Câu này thú nhận sự lười một cách rất thẳng thắn.',
+    contrast: 'Bản Mỹ "I can\'t be bothered" sạch hơn hẳn và dùng được toàn cầu.',
+  },
+
+  /* ---------------- nói bựa: cà khịa ---------------- */
+  c199: {
+    hook: '"Legend" ở đây không phải huyền thoại lịch sử — nó là người vừa làm một chuyện tử tế cho bạn.',
+    pitfall: 'Người Việt hay tưởng đây là khen quá lời nên ngại nói. Thực tế nó rất thường ngày, gần như "cảm ơn ông nhiều".',
+  },
+  c200: {
+    hook: 'Toàn bộ nghĩa nằm ở giọng, không nằm ở chữ. Cười = thân; mặt lạnh = gây sự.',
+    pitfall: 'Đây là câu người Việt dễ dùng sai nhất trong cả nhóm. Nghe người bản xứ nói với NHAU vài chục lần trước khi tự nói.',
+  },
+  c201: {
+    hook: '"Shut up" ở đây không phải bắt im — nó là "thôi đi ông", giống hệt tiếng Việt.',
+    contrast: '"Shut up!" nói giọng cao và vui còn có nghĩa "thật á?!" — ngạc nhiên thích thú, không hề đuổi ai.',
+  },
+  c202: {
+    hook: 'Ghen tị mà phục. Câu này nói khi bạn của bạn vừa làm được điều bạn ước mình làm được.',
+    pitfall: 'Đừng mang sang Mỹ. Ở Anh/Úc là đùa, ở Mỹ nó gần với lời chửi thật.',
+  },
+  c203: {
+    hook: 'Nghĩa đen "đái đi" — hình ảnh vô lý, nên nhớ rất nhanh.',
+    contrast: 'Cùng thang: "get lost" (0) → "piss off" (2) → "fuck off" (3). Ba mức của cùng một ý.',
+  },
+  c204: {
+    hook: 'Đây là cách nói "ông xạo" mà nhắm vào NGƯỜI, khác với "that\'s bullshit" nhắm vào việc.',
+    contrast: 'Bản sạch: "you\'re making that up", "you\'re having me on" (Anh).',
+  },
+  c205: {
+    hook: 'Nói về người đó bằng ngôi thứ ba dù họ đang đứng trước mặt — chính sự cố ý đó tạo ra tiếng cười.',
+    pitfall: 'Cần có người thứ ba nghe cùng thì mới trọn. Nói khi chỉ có hai người nghe sẽ hơi lạc.',
+  },
+  c206: {
+    hook: 'Khuôn "don\'t be a ___" gắn được nhiều từ: don\'t be a jerk / an ass / a prick. Cùng một ý trách móc.',
+    pitfall: 'Dù giọng nhẹ đây vẫn là lời trách thật, không phải trêu. Đừng nhầm nó với nhóm đùa.',
+  },
+  c207: {
+    hook: 'Muppet là con rối trong chương trình thiếu nhi — gọi ai đó là con rối vụng về, thương nhiều hơn giận.',
+    contrast: 'Cùng họ Anh, tăng dần: muppet (1) → plonker → wally → pillock.',
+  },
+  c208: {
+    hook: 'Khen ngược. Càng dùng từ cao ("genius", "champ", "Einstein") thì mỉa càng đau.',
+    pitfall: 'Ngữ điệu quyết định tất cả: "genius" phải hạ giọng và kéo dài. Nói giọng phẳng là thành khen thật.',
+  },
+  c209: {
+    hook: '"Nice try" = cố gắng ghê, nhưng tôi bắt bài rồi. Luôn nói sau khi ai đó vừa thất bại trong việc lừa bạn.',
+  },
+  c210: {
+    hook: 'Viết sai chính tả cố ý là cả nửa cái duyên của từ này — nó báo hiệu "tôi đang đùa kiểu internet".',
+    pitfall: 'Chỉ sống trong game và chat. Nói ngoài đời với người không chơi game sẽ không ai hiểu.',
+  },
+  c211: {
+    hook: '"Destroyed" trong thể thao và game = thua đậm tới mức không có gì để bàn.',
+    contrast: 'Cùng họ và cùng nghĩa: got cooked, got smoked, got bodied, got clapped.',
+  },
+
+  /* ---------------- nói bựa: nhấn mạnh ---------------- */
+  c212: {
+    hook: 'Đây là bài học quan trọng nhất cả nhóm: "fucking" KHÔNG mang nghĩa xấu. Nó chỉ là chữ "rất" bật to hết cỡ.',
+    pitfall: 'Nghe câu này đừng tưởng người ta đang chê. Nghĩa của cả câu do tính từ quyết định, không do từ bậy.',
+    contrast: 'So sánh: "it\'s fucking brilliant" (khen hết lời) vs "it\'s fucking broken" (chê). Cùng một từ, hai hướng.',
+  },
+  c213: {
+    hook: 'Tiếng Anh cho phép chèn nguyên một từ vào GIỮA từ khác. Tiếng Việt không có chuyện đó — nên nó đáng học.',
+    pitfall: 'Chỗ chèn không tuỳ ý: luôn ngay trước âm tiết mang trọng âm. abso-fucking-LUTELY đúng, ab-fucking-solutely sai và nghe rất giả.',
+    contrast: 'Cùng khuôn: un-fucking-believable, in-fucking-credible, guaran-damn-tee.',
+  },
+  c214: {
+    hook: 'Khuôn "từ để hỏi + the fuck" áp được cho cả họ: what/who/where/when/why/how the fuck.',
+    pitfall: 'Chỉ có ở câu hỏi. Không ai nói "I the fuck went home".',
+    contrast: 'Thang độ nóng của cùng khuôn: what on earth (0) → what the heck (0) → what the hell (1) → what the fuck (3).',
+  },
+  c215: {
+    hook: '"Damn" đứng trước tính từ là bộ khuếch đại nhẹ nhất, và là chỗ an toàn nhất để bắt đầu tập nhóm này.',
+    contrast: 'Thang khuếch đại: very (0) → really (0) → damn (1) → bloody (1, Anh) → fucking (3).',
+  },
+  c216: {
+    hook: 'Khuôn "tính từ + as hell" gắn được vào bất cứ tính từ nào. Học một khuôn, dùng được trăm câu.',
+    contrast: 'Bản sạch cùng khuôn: "as anything", "as can be". Bản mạnh: "as fuck" (viết tắt AF trong chat).',
+  },
+  c217: {
+    hook: '"a hell of a" là bộ khuếch đại đứng trước DANH TỪ, khác với "as hell" đứng sau tính từ.',
+    pitfall: 'Nó khen hay chê là do danh từ: "a hell of a developer" (khen) vs "a hell of a mess" (chê).',
+  },
+  c218: {
+    hook: 'Có chữ "ass" nhưng đã đi vào ngôn ngữ quảng cáo — độ nóng gần như bằng không dù nhìn chữ thì tưởng nặng.',
+    pitfall: 'Bài học rộng hơn: nhìn mặt chữ đoán độ nóng là sai. Phải xem thói quen dùng thật.',
+  },
+  c219: {
+    hook: 'Lóng thế hệ trẻ, gắn với nhạc và game. Nó khen cường độ, không khen sự tinh tế.',
+    contrast: 'Cùng lứa: "that\'s fire", "it slaps", "no cap" (= không nói điêu).',
+  },
+  c220: {
+    hook: '"Dead" = hoàn toàn, tuyệt đối. Chẳng liên quan gì tới cái chết.',
+    contrast: 'Cùng khuôn: dead easy, dead wrong, dead tired, dead ahead.',
+  },
+  c221: {
+    hook: 'Cách khuếch đại mạnh nhất mà vẫn sạch — nói được cả trong họp có khách hàng.',
+    contrast: 'Cùng họ sạch: ridiculously good, absurdly fast, stupidly cheap.',
+  },
+
+  /* ---------------- nói bựa: dẹp đi ---------------- */
+  c222: {
+    hook: '"Screw" là bản đã hạ nhiệt của "fuck", dùng được ở chỗ làm mà vẫn giữ nguyên chất buông xuôi.',
+    contrast: 'Cả họ đều có cặp song sinh: screw it / fuck it, screw you / fuck you, screwed / fucked.',
+  },
+  c223: {
+    hook: 'Không phải giận — là "thôi không nghĩ nữa". Đây là câu của 2 giờ sáng, không phải câu của cuộc cãi vã.',
+    pitfall: 'Người Việt hay tưởng mọi câu có f-word đều là giận dữ. Câu này thật ra khá thoải mái.',
+  },
+  c224: {
+    hook: 'Câu hỏi tu từ, không chờ trả lời. Nó tuyên bố "chuyện này không đáng bàn".',
+    pitfall: 'Nếu chuyện đó là của chính người đang nghe, câu này phủ nhận luôn cảm xúc của họ. Rất dễ làm tổn thương.',
+  },
+  c225: {
+    hook: 'Nghĩa đen: tôi không thể cho đi ít hơn được nữa — vì tôi đang cho đi con số không.',
+    pitfall: 'Người Mỹ nói "I could care less", sai logic hoàn toàn mà vẫn cùng nghĩa. Nghe thấy thì đừng sửa lưng họ, đó là thói quen đã đóng băng.',
+    contrast: 'Thang: I don\'t care (0) → I couldn\'t care less (0) → I don\'t give a damn (1) → a shit (2) → a fuck (3).',
+  },
+  c226: {
+    hook: 'Sạch tuyệt đối mà lại là câu dễ mất lòng nhất nhóm — vì nó nói "tôi không buồn tranh luận với ông nữa".',
+    pitfall: 'Đừng tưởng không có từ bậy thì an toàn. Độ sát thương nằm ở thái độ, không ở từ ngữ.',
+  },
+  c227: {
+    hook: 'Khuôn lạ nhưng cực dễ dùng: lặp lại chính chữ của người kia rồi gắn "my ass" vào sau.',
+    pitfall: 'Phải lặp lại chữ của họ thì mới ra. Nói trống không "my ass" thì người nghe không hiểu bạn bác bỏ cái gì.',
+  },
+  c228: {
+    hook: 'Hai chữ này chứa cả hai nghĩa trái ngược. Ngữ điệu là thứ duy nhất phân biệt.',
+    pitfall: 'Người Việt nghe ra "ừ đúng rồi" trong khi người ta đang nói "tin ông mới lạ". Nghe kỹ chỗ hạ giọng ở "right".',
+  },
+  c229: {
+    hook: 'Nghĩa đen: thả nó xuống. Đây là lời yêu cầu dừng thật sự, không phải gợi ý.',
+    pitfall: 'Nói tiếp sau câu này là leo thang. Nhận ra nó là biết lúc nào nên dừng.',
+  },
+  c230: {
+    hook: 'Bản lịch sự nhất của cả nhóm — bỏ qua mà không coi thường ai.',
+    contrast: 'Thang: forget it (0) → never mind (0) → whatever (0 nhưng lạnh) → screw it (2) → fuck it (3).',
+  },
+
+  /* ---------------- nói bựa: sốc ---------------- */
+  c231: {
+    hook: '"Holy + từ bậy" là khuôn kinh ngạc phổ biến nhất tiếng Anh. Trung tính — vui hay sợ đều dùng được.',
+    contrast: 'Cả họ, từ sạch tới nóng: holy cow / holy moly / holy smokes (0) → holy crap (1) → holy shit (2).',
+  },
+  c232: {
+    hook: 'Chèn "fucking" vào giữa cụm "no way" có sẵn. Bỏ nó ra là được câu sạch dùng mọi nơi.',
+    pitfall: 'Đây là mẫu chung: rất nhiều câu bậy chỉ là câu sạch bị chèn thêm một từ. Học câu sạch trước, chèn sau.',
+  },
+  c233: {
+    hook: 'Chèn "actual" để nâng WTF lên một nấc: không chỉ ngạc nhiên mà là hoàn toàn không hiểu nổi.',
+    pitfall: 'Đứng ở gần đỉnh thang. Dùng bừa vài lần là mất hết sức nặng.',
+  },
+  c234: {
+    hook: '"Minced oath" — câu bậy bị bẻ cho sạch, giữ nguyên nhịp và độ bất ngờ. Người ta cố tình nói trước mặt trẻ con.',
+    contrast: 'Cả họ: sugar (thay shit), shoot, fudge, frick, darn, gosh, "what the fudge".',
+  },
+  c235: {
+    hook: 'Phản ứng chuẩn với tin xấu bất ngờ. Sạch hoàn toàn, dùng được cả trong họp.',
+    pitfall: 'Dạng nói thật nuốt gần hết: "you gotta be kiddin\' me". Nghe không ra là vì bạn đang chờ dạng viết.',
+  },
+  c236: {
+    hook: 'Không tục nhưng báng bổ. Đây là loại "nặng" thứ hai mà thang độ tục không đo được.',
+    pitfall: 'Với người sùng đạo, câu này nặng hơn cả "shit". Ở Mỹ nhiều vùng đây là ranh giới thật — đừng đoán bừa.',
+    contrast: 'Bản đã bẻ cho nhẹ: "jeez", "gee", "cripes", "jeepers".',
+  },
+  c237: {
+    hook: 'Bản mức 1 của "holy shit". Cùng nhịp, cùng cảm xúc, đi đâu cũng nói được.',
+  },
+
+  /* ---------------- nói bựa: phản đối, đồng tình ---------------- */
+  c238: {
+    hook: 'Từ Anh đặc trưng nhất trong nhóm. Nghe thấy nó là biết ngay người nói không phải người Mỹ.',
+    pitfall: 'Cái bẫy: "bollocks" = nhảm nhí, nhưng "the dog\'s bollocks" lại là khen hết cỡ. Thêm hai chữ, đảo ngược nghĩa.',
+  },
+  c239: {
+    hook: '"Give me that ___" = đừng đem thứ đó tới đây. Khuôn dùng được với nhiều danh từ: that excuse, that attitude.',
+    pitfall: 'Đây là đối đầu thật, không phải trêu. Chỉ dùng khi bạn đã quyết định gây sự.',
+  },
+  c240: {
+    hook: 'Bỏ đúng một chữ "fucking" là câu này thành lời phản biện dùng được trong họp. Cả nhóm này hoạt động như vậy.',
+  },
+  c241: {
+    hook: 'Chữ CUỐI quyết định nghĩa. "Yeah no" = không. "No yeah" = có. Chữ đầu chỉ là ghi nhận rằng đã nghe.',
+    pitfall: 'Ngược hoàn toàn với trực giác tiếng Việt. Người Việt nghe "yeah" là tưởng đồng ý rồi bỏ qua chữ sau.',
+    contrast: 'Còn có "yeah no for sure" = đồng ý mạnh. Đếm chữ cuối, đừng đếm chữ đầu.',
+  },
+  c242: {
+    hook: 'Hai chữ, thách thức nguồn tin thay vì thách thức người nói. Nhẹ hơn hẳn việc cãi thẳng.',
+  },
+  c243: {
+    hook: 'Khuôn "like hell + mệnh đề" = phủ định mạnh. Nghĩa ngược hẳn với vẻ ngoài khẳng định của nó.',
+    pitfall: 'Nghe "like hell you did" đừng hiểu là "ông làm giống địa ngục". Nó có nghĩa "làm gì có chuyện đó".',
+  },
+  c244: {
+    hook: 'Đồng tình pha tự hào. Hay dùng để tự nhận về mình: "Damn right I did."',
+    contrast: 'Thang đồng tình: absolutely (0) → damn right (1) → hell yes (1) → fuck yeah (3).',
+  },
+  c245: {
+    hook: 'Vui sướng thuần tuý, không có chút ý xấu nào. Đây là bằng chứng rõ nhất rằng f-word không đồng nghĩa với giận dữ.',
+  },
+  c246: {
+    hook: '"Count me in" = tính tôi một suất. Ghép với "hell yes" thành lời nhận lời nhiệt tình nhất mà vẫn nhẹ.',
+    contrast: '"Hell no" là bản phủ định, cũng chỉ mức 1.',
+  },
+  c247: {
+    hook: '"Too right" là cụm Anh/Úc nghĩa "quá đúng". Chèn "fucking" vào giữa để đẩy lên đỉnh.',
+    pitfall: 'Nói giọng Mỹ nghe như đang diễn. Cụm này gắn chặt với vùng miền hơn hầu hết cụm khác.',
+  },
+
+  /* ---------------- nói bựa: hỏng việc ---------------- */
+  c248: {
+    hook: '"Fucked" (tính từ) = hỏng tới mức không cứu được. Khác hẳn động từ "to fuck".',
+    pitfall: 'Trong chat dev thì bình thường tới mức không ai để ý. Trong email hoặc họp có khách thì tuyệt đối không — email tồn tại mãi mãi.',
+    contrast: 'Bản sạch cùng nghĩa: broken, borked, toast, hosed, busted.',
+  },
+  c249: {
+    hook: 'Thành ngữ, đừng dịch từng chữ. Nó nhấn vào chuyện hỏng ĐÚNG LÚC tệ nhất, không chỉ là hỏng.',
+    contrast: 'Cùng ý: "it went belly up", "it fell over", "it died on us".',
+  },
+  c250: {
+    hook: 'Câu hỏi tu từ của mọi lập trình viên. Không ai thật sự chờ câu trả lời.',
+    pitfall: 'Hai cái bẫy: rất hay là chính bạn viết ba tháng trước, và nếu tác giả đang ngồi cùng phòng thì nó thành xúc phạm.',
+  },
+  c251: {
+    hook: 'Hình ảnh: thùng rác đang cháy. Không một từ bậy nào mà chê rất nặng — dùng được trong họp nội bộ.',
+    contrast: 'Cùng họ sạch: "a hot mess", "spaghetti code", "held together with duct tape".',
+  },
+  c252: {
+    hook: 'Hai chữ, nhận lỗi xong, đi tiếp. Người Việt hay xin lỗi dài dòng ở đúng chỗ người bản xứ chỉ nói "my bad".',
+    pitfall: 'Chỉ dùng cho lỗi NHỎ. Lỗi lớn mà nói "my bad" thì nghe như không coi trọng hậu quả.',
+  },
+  c253: {
+    hook: 'Nghịch lý đáng nhớ: tự nhận lỗi bằng từ nặng lại được đánh giá là thẳng thắn và có trách nhiệm.',
+    contrast: 'Chọn theo người nghe: "my bad" (lỗi nhỏ) → "I screwed up" (với sếp) → "I fucked up" (trong nhóm thân).',
+  },
+  c254: {
+    hook: '"Big time" = ở quy mô lớn. Nó là bộ khuếch đại đứng sau động từ, và hoàn toàn sạch.',
+    contrast: 'Cùng khuôn: "I owe you big time", "he messed up big time".',
+  },
+  c255: {
+    hook: 'Từ lóng của dân máy tính, sạch tuyệt đối — nói trong họp cũng không ai nhíu mày.',
+  },
+
+  /* ---------------- nói bựa: nhậu, mệt ---------------- */
+  c256: {
+    hook: 'Rất Anh, hoàn toàn sạch, và mạnh hơn "tired" nhiều. Đây là mức "rã rời", không phải "hơi mệt".',
+    contrast: 'Bản Mỹ: "I\'m beat", "I\'m wiped", "I\'m running on fumes".',
+  },
+  c257: {
+    hook: '"Wasted" = bị phá huỷ. Người bản xứ mô tả cơn say bằng những từ chỉ sự đổ vỡ.',
+    pitfall: 'Cái bẫy Anh–Mỹ nguy hiểm nhất: "pissed" ở Anh là SAY, ở Mỹ là CÁU. Nghe sai là hiểu ngược hoàn toàn.',
+    contrast: 'Cùng họ: hammered, smashed, plastered, trashed, off my face (Úc).',
+  },
+  c258: {
+    hook: 'Rủ rê chứ không phải mô tả. Nói câu này là đang đề nghị một buổi tối mất kiểm soát.',
+    contrast: 'Bản sạch để rủ: "let\'s get a few drinks in", "fancy a couple of pints?".',
+  },
+  c259: {
+    hook: 'Khuôn "dying for + danh từ" dùng cho mọi cơn thèm. Không liên quan gì tới cái chết.',
+    contrast: 'Cùng nghĩa: "I could murder a beer" (rất Anh, nghe dữ mà hoàn toàn vô hại).',
+  },
+  c260: {
+    hook: '"Pint" là đơn vị đo bia của Anh, và cũng là lời mời đi chơi. Rủ pint = rủ ngồi nói chuyện.',
+    pitfall: '"Grab" là động từ vạn năng cho mọi lời rủ: grab lunch, grab a coffee, grab a seat, grab a bite.',
+  },
+  c261: {
+    hook: '"Dead" tả nơi chốn = vắng, không có không khí. Chẳng liên quan gì tới cái chết.',
+    contrast: 'Ngược lại: "this place is buzzing / packed / heaving" (Anh).',
+  },
 };
