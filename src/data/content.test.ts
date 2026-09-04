@@ -461,6 +461,11 @@ describe('Nói bựa — độ nóng và chỗ dùng', () => {
     expect(SCENARIOS.filter((s) => s.id === 's13' || s.id === 's14').length).toBe(2);
     expect(SHADOW_PACKS.filter((p) => p.id === 'sh11' || p.id === 'sh12').length).toBe(2);
   });
+
+  it('hai tình huống mới có ảnh minh hoạ riêng', () => {
+    expect(SCENARIOS.find((s) => s.id === 's13')?.image).toBe('/images/scenarios/ranked-match.jpg');
+    expect(SCENARIOS.find((s) => s.id === 's14')?.image).toBe('/images/scenarios/pub-after-work.jpg');
+  });
 });
 
 describe('Nói bựa — lằn ranh đỏ', () => {

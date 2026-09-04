@@ -21,8 +21,8 @@ nhìn — chỉ cần sinh ảnh, đặt đúng tên vào đúng thư mục là 
 
 ## Phong cách chung (dán kèm mọi prompt)
 
-Để 12 ảnh trông như một bộ chứ không phải 12 ảnh rời rạc, dán đoạn này vào **cuối mọi
-prompt**:
+Để 12 ảnh photo đầu trông như một bộ chứ không phải 12 ảnh rời rạc, dán đoạn này vào
+**cuối prompt của ảnh photo**:
 
 ```
 Style: cinematic editorial photography, shallow depth of field, soft directional light,
@@ -43,7 +43,7 @@ no text, no logos, no watermarks, no readable screens, faces turned away or crop
 
 ---
 
-## 1. Ảnh cho 12 tình huống nhập vai
+## 1. Ảnh cho 14 tình huống nhập vai
 
 **Đường dẫn:** `public/images/scenarios/`
 
@@ -63,6 +63,12 @@ no text, no logos, no watermarks, no readable screens, faces turned away or crop
 | 10 | `apartment.jpg` | Đi xem nhà thuê | `An empty modern apartment living room with large windows and afternoon light falling across bare wooden floor, a single set of keys on the windowsill, clean and full of possibility` |
 | 11 | `meetup.jpg` | Meetup công nghệ | `An evening tech meetup in a loft space, small groups of people talking with drinks in hand, string lights overhead, a projector screen glowing softly in the background, warm and social` |
 | 12 | `phone-call.jpg` | Gọi điện khiếu nại | `A person on a phone call at a kitchen table, paper bill and pen in front of them, slightly frustrated posture, late afternoon light, domestic and relatable` |
+| 13 | `ranked-match.jpg` | Chơi rank với hội bạn | `Three young adult Southeast Asian friends in a friendly voice-chat gaming session. The foreground player wears headphones, raises a fist after a clutch, and the other two react with surprise and laughter. Cozy apartment at night, teal-mint accent lighting, polished contemporary manga illustration, expressive faces, crisp ink lines, refined cel shading, wide composition with space on the left; no text, dialogue balloons, logos, watermarks, or readable game screens` |
+| 14 | `pub-after-work.jpg` | Ra quán sau giờ làm | `Three young adult Southeast Asian coworkers talk candidly around a small table in a welcoming neighborhood pub on Friday evening. One speaks while the others listen and smile in agreement. Warm wood and hanging lights, polished contemporary manga illustration, expressive faces, crisp ink lines, refined cel shading, wide composition with space on the left; no text, dialogue balloons, logos, watermarks, readable signs, or brand labels` |
+
+> Hai tình huống social (`s13`, `s14`) dùng minh hoạ manga có chủ đích: biểu cảm và
+> nhịp đối thoại dễ nhận ra khi luyện banter. Không có bong bóng thoại để người học tự
+> nghe/đọc nội dung trong app thay vì đọc sẵn trên ảnh.
 
 ---
 
@@ -126,10 +132,11 @@ Những ảnh dưới đây **chưa được code dùng**. Nếu muốn, bạn s
 
 ```
 Tình huống nhập vai (bắt buộc nếu muốn có ảnh):
-[ ] standup.jpg        [ ] code-review.jpg    [ ] one-on-one.jpg
-[ ] interview.jpg      [ ] planning.jpg       [ ] incident.jpg
-[ ] cafe.jpg           [ ] doctor.jpg         [ ] airport.jpg
-[ ] apartment.jpg      [ ] meetup.jpg         [ ] phone-call.jpg
+[x] standup.jpg        [x] code-review.jpg    [x] one-on-one.jpg
+[x] interview.jpg      [x] planning.jpg       [x] incident.jpg
+[x] cafe.jpg           [x] doctor.jpg         [x] airport.jpg
+[x] apartment.jpg      [x] meetup.jpg         [x] phone-call.jpg
+[x] ranked-match.jpg   [x] pub-after-work.jpg
 
 Tuỳ chọn:
 [ ] hero.jpg           [ ] icon.png           [ ] packs/sh01–sh10.jpg

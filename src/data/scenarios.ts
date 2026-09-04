@@ -1,7 +1,7 @@
 import type { Scenario } from '@/types';
 
 /* ============================================================================
- *  ROLE-PLAY — 12 tình huống bạn thật sự gặp
+ *  ROLE-PLAY — 14 tình huống bạn thật sự gặp
  *  Nửa công việc (dev), nửa đời sống. Mỗi lượt "you" đều có nhiệm vụ rõ ràng
  *  và vài cách nói thay thế để bạn không bị đóng khung vào một câu duy nhất.
  * ========================================================================== */
@@ -1394,6 +1394,7 @@ export const SCENARIOS: Scenario[] = [
       "You're three rounds into a ranked game with two friends from work. Voice chat is on. Nobody is being polite, and nobody means anything by it.",
     contextVi:
       'Bạn đang chơi rank ván thứ ba với hai người bạn cùng công ty. Voice chat đang bật. Không ai lịch sự, và cũng không ai có ý gì xấu cả.',
+    image: '/images/scenarios/ranked-match.jpg',
     chunkIds: ['c210', 'c211', 'c231', 'c245', 'c196', 'c208', 'c252'],
     turns: [
       {
@@ -1506,6 +1507,7 @@ export const SCENARIOS: Scenario[] = [
       "Friday, 6pm, a noisy pub with two colleagues you get on with. The project has been rough. This is where people say what they actually think.",
     contextVi:
       'Thứ Sáu, 6 giờ tối, một quán ồn ào với hai đồng nghiệp bạn khá hợp. Dự án vừa qua rất mệt. Đây là chỗ người ta nói thật lòng.',
+    image: '/images/scenarios/pub-after-work.jpg',
     chunkIds: ['c260', 'c256', 'c190', 'c187', 'c226', 'c254', 'c259'],
     turns: [
       {
