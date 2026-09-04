@@ -16,6 +16,7 @@ import { useSpeaker } from '@/hooks/useSpeech';
 import { useStore } from '@/store/useStore';
 import { LISTENING } from '@/data/listening';
 import { shuffle } from '@/lib/match';
+import { atOrBelow } from '@/lib/level';
 import { FOCUS_LABEL, type ListenFocus, type ListeningItem } from '@/types';
 import { cn, sample } from '@/lib/utils';
 
@@ -65,8 +66,16 @@ export function ListeningGym() {
   const autoPlayed = useRef<string | null>(null);
 
   const start = () => {
-    let pool = LISTENING;
+    /* Lọc theo trình độ TRƯỚC mọi bộ lọc khác. Trước đây màn này không lọc gì
+     * cả — người đặt A2 vẫn bị ném câu C1 và không có chỗ nào giải thích vì sao
+     * mình nghe mãi không ra. */
+    let pool = atOrBelow(LISTENING, settings.level);
     if (focus !== 'all') pool = pool.filter((l) => l.focus === focus);
+    /* Lọc chặt tới mức hết bài thì thà cho bài khó còn hơn mở ra màn trống —
+     * màn trống trông như app hỏng. */
+    if (!pool.length) {
+      pool = focus === 'all' ? LISTENING : LISTENING.filter((l) => l.focus === focus);
+    }
     const picks = sample(pool, Math.min(count, pool.length));
     setRounds(
       picks.map((item) => ({ item, options: shuffle(item.options, item.id.charCodeAt(2) * 977) })),

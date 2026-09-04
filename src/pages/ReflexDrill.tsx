@@ -27,6 +27,9 @@ import { useAutoStop, useMic, useSpeaker } from '@/hooks/useSpeech';
 import { useAiCoach } from '@/hooks/useAiCoach';
 import type { Recording } from '@/lib/audio';
 import { useStore } from '@/store/useStore';
+import { withinLevel } from '@/lib/level';
+import { isWarmupOn } from '@/lib/warmup';
+import { WarmupModel } from '@/components/shared/WarmupModel';
 import { REFLEX } from '@/data/reflex';
 import { looksLikeEcho, scoreAnswer, shadowAccuracy, shuffle, type MatchResult } from '@/lib/match';
 import { DOMAIN_LABEL, type ReflexPrompt, type ReflexType } from '@/types';
@@ -84,6 +87,9 @@ const PASS_PRAISE = ['Chuẩn!', 'Ngon!', 'Đúng rồi!', 'Bật ra được r�
 
 export function ReflexDrill() {
   const settings = useStore((s) => s.settings);
+  /* Tính ở đây chứ không lưu sẵn: mốc là thời gian thật, và chọn ra một boolean
+   * thì zustand so sánh theo giá trị nên không gây render thừa. */
+  const warmup = isWarmupOn(settings.warmupUntil);
   const log = useStore((s) => s.log);
   const ensureCards = useStore((s) => s.ensureCards);
   const markWeak = useStore((s) => s.markWeak);
@@ -134,11 +140,8 @@ export function ReflexDrill() {
    *   phần còn lại là câu mới → vẫn có cảm giác khám phá
    * Trộn lẫn (interleaving) hiệu quả hơn hẳn học dồn từng loại một. */
   const buildQueue = useCallback(() => {
-    const levelOrder = ['A2', 'B1', 'B2', 'C1'];
-    const maxLevel = levelOrder.indexOf(settings.level) + 1;
     let pool = REFLEX.filter(
-      (r) =>
-        levelOrder.indexOf(r.level) <= maxLevel && settings.focusDomains.includes(r.domain),
+      (r) => withinLevel(r.level, settings.level) && settings.focusDomains.includes(r.domain),
     );
     if (type !== 'all') pool = pool.filter((r) => r.type === type);
     if (pool.length < count) {
@@ -496,6 +499,12 @@ export function ReflexDrill() {
             <p className="mt-2 text-xs text-faint">{current.cueVi}</p>
           )}
           <p className="mt-4 text-xs text-faint">{TYPE_HINT[current.type]}</p>
+
+          {/* Chỉ hiện lúc đang chờ trả lời. Sang màn kết quả thì câu mẫu đã có
+            * chỗ riêng của nó, hiện hai lần chỉ tổ rối. */}
+          {warmup && answering && (
+            <WarmupModel model={current.model} vi={current.modelVi} showVi={settings.showVi} />
+          )}
         </div>
       </Card>
 

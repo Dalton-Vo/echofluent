@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useStore, selectTodayLog, selectMasteredCount, BLANK_DAY } from './useStore';
 import { todayKey } from '@/lib/utils';
+import { isWarmupOn, startWarmup } from '@/lib/warmup';
 
 /* ============================================================================
  *  Store là nơi giữ toàn bộ động lực học: chuỗi ngày, XP, huy hiệu.
@@ -376,5 +377,42 @@ describe('store — cài đặt và xoá dữ liệu', () => {
     expect(useStore.getState().streak).toBe(0);
     expect(useStore.getState().history).toEqual([]);
     expect(useStore.getState().settings.name).toBe('Thịnh');
+  });
+});
+
+describe('store — chế độ làm quen', () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    setToday(2026, 3, 10);
+    reset();
+  });
+  afterEach(() => vi.useRealTimers());
+
+  it('mặc định TẮT — không ai bị phát cái phao mà không xin', () => {
+    expect(useStore.getState().settings.warmupUntil).toBeNull();
+    expect(isWarmupOn(useStore.getState().settings.warmupUntil)).toBe(false);
+  });
+
+  it('bật lên rồi đọc lại vẫn còn, và tự tắt khi qua ngày hết hạn', () => {
+    useStore.getState().setSettings({ warmupUntil: startWarmup() });
+    const until = useStore.getState().settings.warmupUntil;
+    expect(isWarmupOn(until)).toBe(true);
+
+    setToday(2026, 3, 25); // quá 14 ngày
+    expect(isWarmupOn(useStore.getState().settings.warmupUntil)).toBe(false);
+  });
+
+  it('xoá toàn bộ tiến độ vẫn giữ nguyên giai đoạn đang chạy', () => {
+    // resetAll là để làm lại từ đầu về tiến độ, không phải để rút phao của
+    // người đang cần nó — nhất là khi người ta bấm reset lúc đang nản.
+    useStore.getState().setSettings({ warmupUntil: startWarmup() });
+    useStore.getState().resetAll();
+    expect(isWarmupOn(useStore.getState().settings.warmupUntil)).toBe(true);
+  });
+
+  it('quay lại đường đua thì xoá hẳn mốc, không còn hỏi nữa', () => {
+    useStore.getState().setSettings({ warmupUntil: startWarmup() });
+    useStore.getState().setSettings({ warmupUntil: null });
+    expect(useStore.getState().settings.warmupUntil).toBeNull();
   });
 });

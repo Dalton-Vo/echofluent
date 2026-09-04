@@ -22,6 +22,7 @@ import { useStore } from '@/store/useStore';
 import { SHADOW_PACKS, parseShadowLine, plainShadowText } from '@/data/shadowing';
 import { shadowAccuracy } from '@/lib/match';
 import { DOMAIN_LABEL, type ShadowPack } from '@/types';
+import { withinLevel } from '@/lib/level';
 import { asset, cn, gradientFor } from '@/lib/utils';
 
 /* ============================================================================
@@ -43,6 +44,15 @@ export function Shadowing() {
 /* ------------------------------ chọn bộ ------------------------------ */
 
 function PackPicker({ onPick }: { onPick: (id: string) => void }) {
+  const level = useStore((s) => s.settings.level);
+  /* Giống trang Nhập vai: đây là chỗ để duyệt, nên lọc làm mặc định chứ không
+   * giấu hẳn — giấu mà không nói thì người dùng tưởng app mất bài. */
+  const [showAll, setShowAll] = useState(false);
+  const inRange = SHADOW_PACKS.filter((p) => withinLevel(p.level, level));
+  const overLevel = SHADOW_PACKS.length - inRange.length;
+  /* Hết bài thì bỏ lọc — xem chú thích cùng lý do ở trang Nhập vai. */
+  const packs = showAll || inRange.length === 0 ? SHADOW_PACKS : inRange;
+
   return (
     <div className="space-y-6">
       <div className="animate-fade-up flex items-center gap-2.5">
@@ -79,8 +89,27 @@ function PackPicker({ onPick }: { onPick: (id: string) => void }) {
       </Card>
 
       <SectionHeader title="Chọn bộ câu" desc="Mỗi bộ 5–8 câu, khoảng 5 phút." />
+
+      {overLevel > 0 && (
+        <button
+          type="button"
+          onClick={() => setShowAll((v) => !v)}
+          aria-pressed={showAll}
+          className={cn(
+            'rounded-xl border px-3.5 py-2 text-sm font-semibold transition',
+            showAll
+              ? 'border-sky/50 bg-sky/10 text-sky'
+              : 'border-line bg-raised/40 text-muted hover:text-ink',
+          )}
+        >
+          {showAll
+            ? `Đang hiện cả ${overLevel} bộ trên ${level}`
+            : `Hiện thêm ${overLevel} bộ trên ${level}`}
+        </button>
+      )}
+
       <div className="grid gap-3 sm:grid-cols-2">
-        {SHADOW_PACKS.map((p, i) => (
+        {packs.map((p, i) => (
           <button
             key={p.id}
             type="button"

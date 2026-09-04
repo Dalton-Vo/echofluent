@@ -14,6 +14,7 @@ import { SyncSection } from '@/components/settings/SyncSection';
 import { AccountSection } from '@/components/settings/AccountSection';
 import { AiSection } from '@/components/settings/AiSection';
 import { NudgeSection } from '@/components/settings/NudgeSection';
+import { WarmupSection } from '@/components/settings/WarmupSection';
 import { MicCheckSection } from '@/components/settings/MicCheckSection';
 import { useStore } from '@/store/useStore';
 import { sanitizeBackup } from '@/lib/backup';
@@ -163,7 +164,8 @@ export function Settings() {
               options={LEVELS.map((l) => ({ value: l, label: l }))}
             />
             <p className="mt-1.5 text-xs text-faint">
-              Quyết định độ khó của câu hỏi phản xạ. Chọn cao hơn nếu thấy bài quá dễ.
+              Quyết định độ khó của MỌI màn luyện — phản xạ, luyện nghe, nói đuổi, nhập vai.
+              Bạn chỉ nhận bài tới đúng mức này, không cao hơn. Chọn cao hơn nếu thấy bài quá dễ.
             </p>
           </div>
 
@@ -340,6 +342,8 @@ export function Settings() {
       </section>
 
       <MicCheckSection />
+
+      <WarmupSection />
 
       <NudgeSection />
 

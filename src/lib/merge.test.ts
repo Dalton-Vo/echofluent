@@ -19,6 +19,7 @@ const SETTINGS: Settings = {
   micDeviceId: '',
   theme: 'dark',
   sound: true,
+  warmupUntil: null,
 };
 
 const ZERO_TOTALS: Totals = {

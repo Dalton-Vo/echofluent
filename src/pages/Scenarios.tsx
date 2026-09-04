@@ -5,6 +5,7 @@ import { Card, Chip, SectionHeader } from '@/components/ui/primitives';
 import { useStore } from '@/store/useStore';
 import { SCENARIOS } from '@/data/scenarios';
 import { DOMAIN_LABEL, type Domain } from '@/types';
+import { withinLevel } from '@/lib/level';
 import { asset, cn, gradientFor } from '@/lib/utils';
 
 /* Danh sách 12 tình huống. Ảnh minh hoạ là tuỳ chọn — thiếu thì tự vẽ gradient. */
@@ -19,10 +20,20 @@ const FILTERS: { value: Domain | 'all'; label: string }[] = [
 
 export function Scenarios() {
   const done = useStore((s) => s.scenarioDone);
+  const level = useStore((s) => s.settings.level);
   const [filter, setFilter] = useState<Domain | 'all'>('all');
   const [q, setQ] = useState('');
+  /* Đây là trang để DUYỆT, không phải hàng bài tự sinh — nên lọc theo trình độ
+   * làm mặc định, chứ không giấu hẳn. Giấu mà không nói thì lần sau người dùng
+   * đi tìm một tình huống họ nhớ là có, và tưởng app mất bài. */
+  const [showAll, setShowAll] = useState(false);
+  const inRange = SCENARIOS.filter((s) => withinLevel(s.level, level));
+  const overLevel = SCENARIOS.length - inRange.length;
+  /* Lọc tới mức không còn bài nào thì bỏ lọc luôn. Một lưới trống trông y như
+   * app hỏng, và người dùng không có cách nào đoán ra là do trình độ. */
+  const base = showAll || inRange.length === 0 ? SCENARIOS : inRange;
 
-  const list = SCENARIOS.filter((s) => {
+  const list = base.filter((s) => {
     if (filter !== 'all' && s.domain !== filter) return false;
     if (!q.trim()) return true;
     const needle = q.toLowerCase();
@@ -65,6 +76,22 @@ export function Scenarios() {
             {f.label}
           </button>
         ))}
+        {overLevel > 0 && (
+          <button
+            type="button"
+            onClick={() => setShowAll((v) => !v)}
+            aria-pressed={showAll}
+            title={`Trình độ đang đặt: ${level}`}
+            className={cn(
+              'rounded-xl border px-3.5 py-2 text-sm font-semibold transition',
+              showAll
+                ? 'border-sky/50 bg-sky/10 text-sky'
+                : 'border-line bg-raised/40 text-muted hover:text-ink',
+            )}
+          >
+            {showAll ? `Đang hiện cả ${overLevel} bài trên ${level}` : `Hiện thêm ${overLevel} bài trên ${level}`}
+          </button>
+        )}
         <div className="relative ml-auto min-w-[180px] flex-1 sm:flex-none">
           <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-faint" />
           <input

@@ -318,4 +318,12 @@ export interface Settings {
   micDeviceId: string;
   theme: 'dark' | 'light';
   sound: boolean;
+  /**
+   * Chế độ làm quen: mốc kết thúc (timestamp ms), null là chưa từng bật.
+   *
+   * Nằm trong `Settings` chứ không nằm riêng, để nó tự đi theo bản đồng bộ sang
+   * máy khác — giai đoạn thích nghi là chuyện của người học, không phải cấu
+   * hình của một cái máy. Xem `lib/warmup.ts`.
+   */
+  warmupUntil: number | null;
 }

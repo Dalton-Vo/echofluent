@@ -7,7 +7,8 @@ import { SHADOW_PACKS, parseShadowLine, plainShadowText } from './shadowing';
 import { ACHIEVEMENTS, MISSION_POOL, levelFromXp, missionsForWeek } from './gamify';
 import { MEMORY_HOOKS } from './memoryHooks';
 import { normalize, scoreAnswer } from '@/lib/match';
-import { DOMAIN_LABEL, FN_LABEL, FOCUS_LABEL } from '@/types';
+import { atOrBelow, LEVEL_ORDER } from '@/lib/level';
+import { DOMAIN_LABEL, FN_LABEL, FOCUS_LABEL, type Level } from '@/types';
 
 /* ============================================================================
  *  KIỂM ĐỊNH CHẤT LƯỢNG NỘI DUNG
@@ -522,5 +523,56 @@ describe('Nói bựa — lằn ranh đỏ', () => {
     const w = BLOCKED[0];
     expect(new RegExp(`\\b${w}\\b`).test(normalize(`this is a ${w} example`))).toBe(true);
     expect(BLOCKED.length).toBeGreaterThanOrEqual(10);
+  });
+});
+
+describe('Tầm trình độ — mọi mức đều học được', () => {
+  /*
+   * Từ khi các màn lọc THẬT theo trình độ (trước đây `+1` ở hai màn, và ba màn
+   * còn lại quên lọc hẳn), thư viện nội dung phải gánh thêm một ràng buộc mới:
+   * mỗi mức phải còn đủ bài để mở ra không thấy màn trống.
+   *
+   * Test này canh đúng chỗ đó. Nội dung mới thường được viết ở B1–C1 vì viết
+   * cho người mới khó hơn — nên A2 là mức dễ bị bỏ đói nhất, và cũng là mức của
+   * đúng những người cần nó nhất.
+   */
+  /* Kiểu ghi rõ ra: nếu để suy diễn thì bốn mảng khác kiểu nhau gộp thành
+   * union, và `atOrBelow` không nhận nữa. */
+  const MODES: { ten: string; items: readonly { id: string; level: Level }[]; min: number }[] = [
+    { ten: 'câu phản xạ', items: REFLEX, min: 5 },
+    { ten: 'bài luyện nghe', items: LISTENING, min: 5 },
+    { ten: 'tình huống nhập vai', items: SCENARIOS, min: 1 },
+    { ten: 'bộ shadowing', items: SHADOW_PACKS, min: 1 },
+  ];
+
+  it('mức nào cũng còn bài ở mọi màn, không có màn trống', () => {
+    const doi: string[] = [];
+    for (const lv of LEVEL_ORDER) {
+      for (const m of MODES) {
+        const n = atOrBelow(m.items, lv).length;
+        if (n < m.min) doi.push(`${lv} · ${m.ten}: ${n} (cần ${m.min})`);
+      }
+    }
+    expect(doi).toEqual([]);
+  });
+
+  it('lên một mức thì bài chỉ nhiều thêm, không bao giờ ít đi', () => {
+    for (const m of MODES) {
+      let truoc = -1;
+      for (const lv of LEVEL_ORDER) {
+        const n = atOrBelow(m.items, lv).length;
+        expect(n, `${m.ten} tại ${lv}`).toBeGreaterThanOrEqual(truoc);
+        truoc = n;
+      }
+    }
+  });
+
+  it('đặt B1 thì tuyệt đối không có bài B2 hay C1 lọt vào', () => {
+    // Đây là con bug đã làm người học tưởng mình kém: ô cài đặt ghi B1 mà câu
+    // hỏi ra là B2. Giữ test này để nó không quay lại bằng đường khác.
+    for (const m of MODES) {
+      const lot = atOrBelow(m.items, 'B1').filter((x) => x.level === 'B2' || x.level === 'C1');
+      expect(lot.map((x) => x.id), m.ten).toEqual([]);
+    }
   });
 });

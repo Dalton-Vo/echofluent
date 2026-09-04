@@ -135,6 +135,7 @@ const DEFAULT_SETTINGS: Settings = {
   micDeviceId: '',
   theme: 'dark',
   sound: true,
+  warmupUntil: null,
 };
 
 function emptyDay(date: string): DayLog {

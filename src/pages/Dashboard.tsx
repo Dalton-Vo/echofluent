@@ -14,6 +14,8 @@ import {
   TrendingUp,
   Check,
   ShieldCheck,
+  LifeBuoy,
+  Flag,
 } from 'lucide-react';
 import { useStore, selectTodayLog, selectMasteredCount, BLANK_DAY } from '@/store/useStore';
 import { Card, Chip, ProgressBar, SectionHeader, Stat } from '@/components/ui/primitives';
@@ -23,6 +25,7 @@ import { missionsForWeek, levelFromXp } from '@/data/gamify';
 import { dueCards } from '@/lib/srs';
 import { FN_LABEL } from '@/types';
 import { cn, formatMs, greeting, todayKey, weekKey, WEEKDAYS_VI, dateFromKey } from '@/lib/utils';
+import { WARMUP_DAYS, isWarmupOn, isWarmupOver, startWarmup, warmupDaysLeft } from '@/lib/warmup';
 
 /* Trang chính: trả lời đúng một câu hỏi — "hôm nay tôi nên làm gì?" */
 
@@ -97,6 +100,8 @@ export function Dashboard() {
 
   return (
     <div className="space-y-8">
+      <WarmupBanner />
+
       {/* ---------------- Lời chào + tiến độ hôm nay ---------------- */}
       <section className="animate-fade-up">
         <div className="mb-1 flex flex-wrap items-center gap-2">
@@ -523,4 +528,75 @@ function MiniHeat({
       })}
     </div>
   );
+}
+
+/* ------------------------------ chế độ làm quen ------------------------------ */
+
+/**
+ * Dải nhắc ở đầu trang chính.
+ *
+ * Hiện khi đang trong giai đoạn làm quen (đếm ngày lùi), và hiện lại lúc hết
+ * hạn để hỏi một câu. Đặt ở đây chứ không giấu trong Cài đặt vì nó cần được
+ * nhìn thấy mỗi ngày: cái phao mà quên mất là mình đang cầm thì nó thành nạng.
+ *
+ * Không có gì thì không chiếm chỗ — đây là trang trả lời "hôm nay làm gì", một
+ * dải trống nằm trên cùng chỉ làm loãng câu trả lời đó.
+ */
+function WarmupBanner() {
+  const until = useStore((s) => s.settings.warmupUntil);
+  const setSettings = useStore((s) => s.setSettings);
+
+  if (isWarmupOn(until)) {
+    const left = warmupDaysLeft(until);
+    return (
+      <Card className="animate-fade-up border-sky/30 bg-sky/[.06] !p-4">
+        <div className="flex flex-wrap items-center gap-3">
+          <LifeBuoy size={18} className="shrink-0 text-sky" />
+          <p className="min-w-0 flex-1 text-sm text-muted">
+            <strong className="text-ink">Đang làm quen — còn {left} ngày.</strong> Câu mẫu hiện
+            sẵn trước khi bạn nói. Cứ nhại theo cho quen miệng đã.
+          </p>
+          <button
+            type="button"
+            className="btn-quiet text-xs"
+            onClick={() => setSettings({ warmupUntil: null })}
+          >
+            <Flag size={13} /> Quay lại đường đua
+          </button>
+        </div>
+      </Card>
+    );
+  }
+
+  if (isWarmupOver(until)) {
+    return (
+      <Card className="animate-fade-up border-amber/30 bg-amber/[.06] !p-4">
+        <div className="flex flex-wrap items-center gap-3">
+          <Flag size={18} className="shrink-0 text-amber" />
+          <p className="min-w-0 flex-1 text-sm text-muted">
+            <strong className="text-ink">Hết {WARMUP_DAYS} ngày làm quen rồi.</strong> Quay lại
+            đường đua, hay cần thêm một đợt nữa? Gia hạn không phải là thua.
+          </p>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              className="btn-primary px-3 py-1.5 text-xs"
+              onClick={() => setSettings({ warmupUntil: null })}
+            >
+              Tôi sẵn sàng
+            </button>
+            <button
+              type="button"
+              className="btn-quiet text-xs"
+              onClick={() => setSettings({ warmupUntil: startWarmup() })}
+            >
+              Thêm {WARMUP_DAYS} ngày
+            </button>
+          </div>
+        </div>
+      </Card>
+    );
+  }
+
+  return null;
 }

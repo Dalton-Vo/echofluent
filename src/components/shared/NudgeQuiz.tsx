@@ -7,6 +7,9 @@ import { useMic, useSpeaker } from '@/hooks/useSpeech';
 import { useAiCoach } from '@/hooks/useAiCoach';
 import { useNudge, popNotification } from '@/hooks/useNudge';
 import { useStore } from '@/store/useStore';
+import { withinLevel } from '@/lib/level';
+import { isWarmupOn } from '@/lib/warmup';
+import { WarmupModel } from '@/components/shared/WarmupModel';
 import { REFLEX } from '@/data/reflex';
 import { looksLikeEcho, scoreAnswer, type MatchResult } from '@/lib/match';
 import type { Recording } from '@/lib/audio';
@@ -27,6 +30,9 @@ import { cn, formatMs } from '@/lib/utils';
 
 export function NudgeQuiz() {
   const settings = useStore((s) => s.settings);
+  /* Tính ở đây chứ không lưu sẵn: mốc là thời gian thật, và chọn ra một boolean
+   * thì zustand so sánh theo giá trị nên không gây render thừa. */
+  const warmup = isWarmupOn(settings.warmupUntil);
   const nudgeCfg = useStore((s) => s.nudge);
   const log = useStore((s) => s.log);
   const ensureCards = useStore((s) => s.ensureCards);
@@ -46,10 +52,8 @@ export function NudgeQuiz() {
   /* Chỉ lấy câu trong phạm vi trình độ và bối cảnh người dùng đã chọn — bị hỏi
    * bất chợt đã đủ khó rồi, không cần thêm câu ngoài tầm cho nản. */
   const pool = useMemo(() => {
-    const order = ['A2', 'B1', 'B2', 'C1'];
-    const max = order.indexOf(settings.level) + 1;
     const inRange = REFLEX.filter(
-      (r) => order.indexOf(r.level) <= max && settings.focusDomains.includes(r.domain),
+      (r) => withinLevel(r.level, settings.level) && settings.focusDomains.includes(r.domain),
     );
     return inRange.length ? inRange : REFLEX;
   }, [settings.level, settings.focusDomains]);
@@ -165,8 +169,15 @@ export function NudgeQuiz() {
 
   return (
     <div className="fixed inset-0 z-50 grid place-items-center bg-bg/80 p-4 backdrop-blur-sm">
-      <div className="animate-fade-up w-full max-w-lg overflow-hidden rounded-2xl border border-mint/30 bg-surface shadow-2xl">
-        <div className="flex items-center justify-between border-b border-line/70 px-5 py-3">
+      {/* Cao tối đa bằng màn hình, rồi cho phần thân tự cuộn.
+        * Trước đây thẻ chỉ có `overflow-hidden`: bảng chấm phát âm dài gấp
+        * đôi phần còn lại nên bị cắt cụt, và không có cách nào kéo xuống —
+        * người học thấy lời khuyên đứt giữa chừng mà tưởng app hỏng.
+        * Dùng `dvh` vì trên di động thanh địa chỉ ăn mất một phần `vh`. */}
+      <div className="animate-fade-up flex max-h-[calc(100dvh-2rem)] w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-mint/30 bg-surface shadow-2xl">
+        {/* Thanh đầu đứng yên: nút đóng phải luôn với tới được, kể cả khi
+          * đang cuộn giữa một bảng chấm điểm dài. */}
+        <div className="flex shrink-0 items-center justify-between border-b border-line/70 px-5 py-3">
           <span className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-mint">
             <Zap size={13} /> Hỏi bất chợt
           </span>
@@ -180,109 +191,118 @@ export function NudgeQuiz() {
           </button>
         </div>
 
-        <div className="px-5 py-6 text-center">
-          <p className="text-[11px] font-semibold uppercase tracking-[.16em] text-faint">
-            {prompt.type === 'translate' ? 'Nói câu này bằng tiếng Anh' : 'Trả lời ngay'}
-          </p>
-          <p className="mx-auto mt-3 max-w-md text-balance text-xl font-bold leading-snug text-ink">
-            {prompt.cue}
-          </p>
-          {prompt.type !== 'translate' && settings.showVi && (
-            <p className="mt-1.5 text-sm text-muted">{prompt.cueVi}</p>
-          )}
-          {prompt.type !== 'translate' && (
-            <div className="mt-3">
-              <SpeakButton text={prompt.cue} variant="icon" />
+        {/* Phần thân — chỗ duy nhất được cuộn. `overscroll-contain` để
+          * cuộn hết thẻ thì dừng, không kéo lây trang phía sau. */}
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+          <div className="px-5 py-6 text-center">
+            <p className="text-[11px] font-semibold uppercase tracking-[.16em] text-faint">
+              {prompt.type === 'translate' ? 'Nói câu này bằng tiếng Anh' : 'Trả lời ngay'}
+            </p>
+            <p className="mx-auto mt-3 max-w-md text-balance text-xl font-bold leading-snug text-ink">
+              {prompt.cue}
+            </p>
+            {prompt.type !== 'translate' && settings.showVi && (
+              <p className="mt-1.5 text-sm text-muted">{prompt.cueVi}</p>
+            )}
+            {prompt.type !== 'translate' && (
+              <div className="mt-3">
+                <SpeakButton text={prompt.cue} variant="icon" />
+              </div>
+            )}
+
+            {/* Trả lời xong thì khối kết quả đã có câu mẫu riêng — không hiện hai lần. */}
+            {warmup && !answered && (
+              <WarmupModel model={prompt.model} vi={prompt.modelVi} showVi={settings.showVi} />
+            )}
+          </div>
+
+          {!answered ? (
+            <div className="flex flex-col items-center gap-4 border-t border-line/70 px-5 py-6">
+              <MicButton
+                state={mic.state}
+                level={mic.level}
+                resumed={mic.resumed}
+              sttSilent={mic.sttSilent}
+              browserName={mic.quirks.name}
+              aiReady={coach.ready}
+                size="md"
+                disabled={busy}
+                onStart={() => void mic.start()}
+                onStop={() => void answer(false)}
+                hint={mic.state === 'listening' ? 'Nói xong bấm để chấm' : 'Bấm rồi nói'}
+              />
+              {mic.transcript && (
+                <p className="max-w-md rounded-xl bg-raised/60 px-4 py-2 text-center text-sm text-ink">
+                  {mic.transcript}
+                </p>
+              )}
+              <div className="flex flex-wrap justify-center gap-2">
+                {manual && (
+                  <button
+                    type="button"
+                    className="btn-primary"
+                    disabled={busy}
+                    onClick={() => void answer(false)}
+                  >
+                    <Check size={15} /> Tôi đã nói xong
+                  </button>
+                )}
+                <button
+                  type="button"
+                  className="btn-ghost"
+                  disabled={busy}
+                  onClick={() => void answer(true)}
+                >
+                  <SkipForward size={15} /> Bỏ qua câu này
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-4 border-t border-line/70 px-5 py-5">
+              <div className="flex items-center justify-between gap-3">
+                <span
+                  className={cn(
+                    'text-sm font-bold',
+                    !result ? 'text-rose' : result.score >= 60 ? 'text-mint' : 'text-amber',
+                  )}
+                >
+                  {result ? `${result.score}/100 điểm` : 'Chưa nói được'}
+                </span>
+                <span className="font-mono text-xs text-faint">
+                  {formatMs(performance.now() - openedAt.current)}
+                </span>
+              </div>
+
+              <div className="rounded-xl border border-mint/25 bg-mint/[.06] p-3.5">
+                <div className="mb-1 flex items-center justify-between">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-mint">
+                    Người bản xứ sẽ nói
+                  </span>
+                  <SpeakButton text={prompt.model} variant="icon" />
+                </div>
+                <p className="text-sm font-semibold leading-relaxed text-ink">{prompt.model}</p>
+                <p className="mt-1 text-xs text-muted">{prompt.modelVi}</p>
+              </div>
+
+              {coach.ready && recording && !coach.report && !coach.busy && !coach.error && (
+                <button
+                  type="button"
+                  onClick={() => void coach.review(recording, prompt.model)}
+                  className="btn-violet w-full py-2 text-sm"
+                >
+                  <Sparkles size={14} /> Chấm phát âm
+                </button>
+              )}
+              {(coach.busy || coach.report || coach.error) && (
+                <PronunciationCard report={coach.report} busy={coach.busy} error={coach.error} />
+              )}
+
+              <button type="button" onClick={close} className="btn-primary w-full py-2.5">
+                Xong, quay lại việc <ArrowRight size={15} />
+              </button>
             </div>
           )}
         </div>
-
-        {!answered ? (
-          <div className="flex flex-col items-center gap-4 border-t border-line/70 px-5 py-6">
-            <MicButton
-              state={mic.state}
-              level={mic.level}
-              resumed={mic.resumed}
-            sttSilent={mic.sttSilent}
-            browserName={mic.quirks.name}
-            aiReady={coach.ready}
-              size="md"
-              disabled={busy}
-              onStart={() => void mic.start()}
-              onStop={() => void answer(false)}
-              hint={mic.state === 'listening' ? 'Nói xong bấm để chấm' : 'Bấm rồi nói'}
-            />
-            {mic.transcript && (
-              <p className="max-w-md rounded-xl bg-raised/60 px-4 py-2 text-center text-sm text-ink">
-                {mic.transcript}
-              </p>
-            )}
-            <div className="flex flex-wrap justify-center gap-2">
-              {manual && (
-                <button
-                  type="button"
-                  className="btn-primary"
-                  disabled={busy}
-                  onClick={() => void answer(false)}
-                >
-                  <Check size={15} /> Tôi đã nói xong
-                </button>
-              )}
-              <button
-                type="button"
-                className="btn-ghost"
-                disabled={busy}
-                onClick={() => void answer(true)}
-              >
-                <SkipForward size={15} /> Bỏ qua câu này
-              </button>
-            </div>
-          </div>
-        ) : (
-          <div className="space-y-4 border-t border-line/70 px-5 py-5">
-            <div className="flex items-center justify-between gap-3">
-              <span
-                className={cn(
-                  'text-sm font-bold',
-                  !result ? 'text-rose' : result.score >= 60 ? 'text-mint' : 'text-amber',
-                )}
-              >
-                {result ? `${result.score}/100 điểm` : 'Chưa nói được'}
-              </span>
-              <span className="font-mono text-xs text-faint">
-                {formatMs(performance.now() - openedAt.current)}
-              </span>
-            </div>
-
-            <div className="rounded-xl border border-mint/25 bg-mint/[.06] p-3.5">
-              <div className="mb-1 flex items-center justify-between">
-                <span className="text-[11px] font-bold uppercase tracking-wider text-mint">
-                  Người bản xứ sẽ nói
-                </span>
-                <SpeakButton text={prompt.model} variant="icon" />
-              </div>
-              <p className="text-sm font-semibold leading-relaxed text-ink">{prompt.model}</p>
-              <p className="mt-1 text-xs text-muted">{prompt.modelVi}</p>
-            </div>
-
-            {coach.ready && recording && !coach.report && !coach.busy && !coach.error && (
-              <button
-                type="button"
-                onClick={() => void coach.review(recording, prompt.model)}
-                className="btn-violet w-full py-2 text-sm"
-              >
-                <Sparkles size={14} /> Chấm phát âm
-              </button>
-            )}
-            {(coach.busy || coach.report || coach.error) && (
-              <PronunciationCard report={coach.report} busy={coach.busy} error={coach.error} />
-            )}
-
-            <button type="button" onClick={close} className="btn-primary w-full py-2.5">
-              Xong, quay lại việc <ArrowRight size={15} />
-            </button>
-          </div>
-        )}
       </div>
     </div>
   );
