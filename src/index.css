@@ -4,34 +4,34 @@
 
 :root,
 [data-theme='dark'] {
-  --c-bg: 9 10 14;
-  --c-surface: 18 20 27;
-  --c-raised: 26 29 38;
-  --c-line: 42 46 58;
-  --c-ink: 236 239 245;
-  --c-muted: 154 161 178;
-  --c-faint: 104 112 130;
-  --c-mint: 52 229 160;
-  --c-violet: 148 128 250;
-  --c-amber: 250 194 92;
-  --c-rose: 250 118 130;
-  --c-sky: 94 178 255;
+  --c-bg: 16 20 28;
+  --c-surface: 28 36 44;
+  --c-raised: 28 36 44;
+  --c-line: 100 116 132;
+  --c-ink: 244 240 224;
+  --c-muted: 172 184 192;
+  --c-faint: 172 184 192;
+  --c-mint: 80 224 160;
+  --c-violet: 144 176 248;
+  --c-amber: 248 200 88;
+  --c-rose: 248 128 136;
+  --c-sky: 144 176 248;
   color-scheme: dark;
 }
 
 [data-theme='light'] {
-  --c-bg: 247 248 251;
-  --c-surface: 255 255 255;
-  --c-raised: 245 246 250;
-  --c-line: 224 228 236;
-  --c-ink: 22 25 33;
-  --c-muted: 92 101 120;
-  --c-faint: 138 147 165;
-  --c-mint: 12 168 110;
-  --c-violet: 108 82 235;
-  --c-amber: 196 132 12;
-  --c-rose: 219 60 79;
-  --c-sky: 20 122 214;
+  --c-bg: 248 244 228;
+  --c-surface: 255 252 240;
+  --c-raised: 255 252 240;
+  --c-line: 112 108 100;
+  --c-ink: 28 36 44;
+  --c-muted: 88 96 100;
+  --c-faint: 88 96 100;
+  --c-mint: 16 112 72;
+  --c-violet: 56 80 176;
+  --c-amber: 136 88 0;
+  --c-rose: 176 44 64;
+  --c-sky: 56 80 176;
   color-scheme: light;
 }
 
@@ -46,27 +46,57 @@ body,
 }
 
 body {
-  @apply bg-bg text-ink font-sans antialiased;
+  @apply bg-bg text-ink font-sans;
   margin: 0;
   overflow-x: hidden;
 }
 
 ::selection {
-  background: rgb(var(--c-mint) / 0.28);
+  background: rgb(var(--c-mint));
+  color: rgb(var(--c-bg));
+}
+
+/* Keep real Vietnamese glyphs and normal browser text rendering. */
+h1, h2, h3, label { text-wrap: pretty; }
+button, input, select, textarea { touch-action: manipulation; }
+:focus-visible {
+  outline: 2px solid rgb(var(--c-mint)) !important;
+  outline-offset: 4px;
+}
+
+/* One treatment for every existing Lucide import; no new icon dependency. */
+svg.lucide {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  stroke-width: 3;
+  stroke-linecap: square;
+  stroke-linejoin: miter;
+  shape-rendering: crispEdges;
+}
+svg.lucide:is([width='17'], [width='18'], [width='19'], [width='20'], [width='21'], [width='22'], [width='24']) {
+  width: 24px;
+  height: 24px;
+  stroke-width: 2.5;
+}
+svg.lucide:is([width='26'], [width='28'], [width='30'], [width='32']) {
+  width: 32px;
+  height: 32px;
+  stroke-width: 2.5;
 }
 
 /* ---------- scrollbar ---------- */
 ::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
+  width: 12px;
+  height: 12px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
   background: rgb(var(--c-line));
-  border-radius: 99px;
-  border: 3px solid rgb(var(--c-bg));
+  border-radius: 0;
+  border: 4px solid rgb(var(--c-bg));
 }
 ::-webkit-scrollbar-thumb:hover {
   background: rgb(var(--c-faint));
@@ -75,63 +105,57 @@ body {
 /* ---------- reusable component classes ---------- */
 @layer components {
   .card {
-    @apply rounded-2xl border border-line/70 bg-surface shadow-soft;
+    @apply rounded-2xl border-2 border-line bg-surface shadow-soft;
   }
 
   .card-hover {
-    @apply transition-all duration-200 hover:border-line hover:-translate-y-0.5 hover:shadow-[0_10px_40px_-18px_rgba(0,0,0,.7)];
+    @apply transition-none hover:border-ink hover:-translate-y-1;
   }
 
   .btn {
-    @apply inline-flex select-none items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold
-           transition-all duration-150 active:scale-[.97] disabled:pointer-events-none disabled:opacity-40;
+    @apply inline-flex min-h-12 select-none items-center justify-center gap-2 rounded-xl border-2 border-transparent px-4 py-2 text-sm font-semibold
+           shadow-soft transition-none enabled:active:translate-x-1 enabled:active:translate-y-1 enabled:active:shadow-none
+           disabled:cursor-not-allowed disabled:border-line disabled:bg-raised disabled:text-muted disabled:shadow-none;
   }
 
   .btn-primary {
-    @apply btn bg-mint text-[#04120c] hover:brightness-110;
+    @apply btn border-mint bg-mint text-bg enabled:hover:border-ink enabled:hover:bg-ink;
   }
 
   .btn-violet {
-    @apply btn bg-violet text-white hover:brightness-110;
+    @apply btn border-violet bg-violet text-bg enabled:hover:border-ink enabled:hover:bg-ink;
   }
 
   .btn-ghost {
-    @apply btn border border-line bg-raised/60 text-ink hover:bg-raised;
+    @apply btn border-line bg-surface text-ink enabled:hover:border-ink;
   }
 
   .btn-quiet {
-    @apply btn text-muted hover:bg-raised hover:text-ink;
+    @apply btn bg-surface text-muted shadow-none enabled:hover:border-line enabled:hover:text-ink;
   }
 
   .chip {
-    @apply inline-flex items-center gap-1.5 rounded-full border border-line/80 bg-raised/60 px-2.5 py-1
-           text-[11px] font-semibold uppercase tracking-wide text-muted;
+    @apply inline-flex items-center gap-1 rounded-full border-2 border-line bg-surface px-2 py-1
+           text-xs font-semibold leading-5 text-muted;
   }
 
   .input {
-    @apply w-full rounded-xl border border-line bg-raised/50 px-3.5 py-2.5 text-sm text-ink outline-none
-           transition placeholder:text-faint focus:border-mint/60 focus:ring-2 focus:ring-mint/20;
+    @apply min-h-12 w-full rounded-xl border-2 border-line bg-surface px-4 py-2 text-base leading-6 text-ink
+           transition-none placeholder:text-muted focus:border-mint disabled:cursor-not-allowed disabled:bg-raised disabled:text-muted;
   }
 
   .label {
-    @apply mb-1.5 block text-xs font-semibold uppercase tracking-wider text-faint;
+    @apply mb-2 block text-xs font-semibold leading-5 text-muted;
   }
 
   .section-title {
-    @apply text-[13px] font-bold uppercase tracking-[.14em] text-faint;
+    @apply text-base font-bold leading-6 text-ink;
   }
 }
 
 /* ---------- utilities ---------- */
 @layer utilities {
-  .grain::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    opacity: 0.035;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)'/%3E%3C/svg%3E");
-  }
+  .font-pixel { font-synthesis: none; letter-spacing: 0; }
 
   .text-balance {
     text-wrap: balance;
