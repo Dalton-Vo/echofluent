@@ -50,18 +50,15 @@ export function Shell({ children }: { children: ReactNode }) {
   return (
     <div className="flex min-h-screen bg-bg">
       {/* ---------------- Sidebar (desktop) ---------------- */}
-      <aside className="sticky top-0 hidden h-screen w-[248px] shrink-0 flex-col border-r border-line/70 bg-surface/40 px-3 py-5 lg:flex">
+      <aside className="sticky top-0 hidden h-screen w-[248px] shrink-0 flex-col overflow-y-auto border-r-2 border-line bg-surface px-3 py-4 lg:flex">
         <div className="mb-6 flex items-center gap-2.5 px-2">
-          <div className="grid h-9 w-9 place-items-center rounded-xl bg-mint text-lg text-[#04120c]">
-            🗣️
-          </div>
           <div className="leading-tight">
-            <div className="text-[15px] font-extrabold tracking-tight text-ink">EchoFluent</div>
-            <div className="text-[11px] text-faint">Phản xạ, không phải ngữ pháp</div>
+            <div className="font-pixel text-base leading-8 text-mint">EchoFluent</div>
+            <div className="mt-1 text-xs leading-5 text-muted">Phản xạ, không phải ngữ pháp</div>
           </div>
         </div>
 
-        <nav className="flex flex-1 flex-col gap-0.5">
+        <nav aria-label="Điều hướng chính" className="flex flex-1 flex-col gap-1">
           {NAV.map((item) => (
             <NavLink
               key={item.to}
@@ -69,17 +66,17 @@ export function Shell({ children }: { children: ReactNode }) {
               end={item.end}
               className={({ isActive }) =>
                 cn(
-                  'group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition-all',
+                  'group flex min-h-12 items-center gap-3 border-2 px-3 py-2 text-sm font-semibold transition-none',
                   isActive
-                    ? 'bg-mint/12 text-mint'
-                    : 'text-muted hover:bg-raised/60 hover:text-ink',
+                    ? 'border-mint bg-surface text-mint'
+                    : 'border-transparent text-muted hover:border-line hover:text-ink',
                 )
               }
             >
-              <item.icon size={17} className="shrink-0" />
+              <item.icon size={24} className="shrink-0" />
               <span className="flex-1">{item.label}</span>
               {item.badge === 'due' && due > 0 && (
-                <span className="rounded-full bg-amber px-1.5 py-0.5 text-[10px] font-bold text-[#1a1000]">
+                <span className="bg-amber px-1 py-1 text-xs font-bold text-bg">
                   {due > 99 ? '99+' : due}
                 </span>
               )}
@@ -109,7 +106,7 @@ export function Shell({ children }: { children: ReactNode }) {
               type="button"
               onClick={toggleTheme}
               aria-label="Đổi giao diện sáng/tối"
-              className="grid h-8 w-8 place-items-center rounded-lg bg-raised/60 text-muted transition hover:text-ink"
+              className="grid h-11 w-11 place-items-center border-2 border-line bg-surface text-muted hover:text-ink"
             >
               {theme === 'dark' ? <Sun size={15} /> : <Moon size={15} />}
             </button>
@@ -117,7 +114,7 @@ export function Shell({ children }: { children: ReactNode }) {
               to="/settings"
               aria-label="Cài đặt"
               className={cn(
-                'grid h-8 w-8 place-items-center rounded-lg bg-raised/60 transition hover:text-ink',
+                'grid h-11 w-11 place-items-center border-2 border-line bg-surface hover:text-ink',
                 pathname === '/settings' ? 'text-mint' : 'text-muted',
               )}
             >
@@ -128,7 +125,7 @@ export function Shell({ children }: { children: ReactNode }) {
       </aside>
 
       {/* ---------------- Nội dung ---------------- */}
-      <main className="min-w-0 flex-1 pb-24 lg:pb-0">
+      <main className="min-w-0 flex-1 pb-[calc(112px+env(safe-area-inset-bottom))] lg:pb-0">
         <MobileTop streak={streak} level={lv.level} onToggleTheme={toggleTheme} theme={theme} />
         <div className="mx-auto w-full max-w-[1100px] px-4 py-5 sm:px-6 sm:py-8">{children}</div>
       </main>
@@ -150,10 +147,9 @@ function MobileTop({
   onToggleTheme: () => void;
 }) {
   return (
-    <header className="sticky top-0 z-20 flex items-center justify-between gap-3 border-b border-line/70 bg-bg/85 px-4 py-3 backdrop-blur-xl lg:hidden">
+    <header className="sticky top-0 z-20 flex flex-wrap items-center justify-between gap-3 border-b-2 border-line bg-bg px-4 py-3 lg:hidden">
       <div className="flex items-center gap-2">
-        <span className="text-lg">🗣️</span>
-        <span className="text-sm font-extrabold tracking-tight text-ink">EchoFluent</span>
+        <span className="font-pixel text-base leading-8 text-mint">EchoFluent</span>
       </div>
       <div className="flex items-center gap-2">
         <span className="chip">Cấp {level}</span>
@@ -165,26 +161,40 @@ function MobileTop({
           type="button"
           onClick={onToggleTheme}
           aria-label="Đổi giao diện"
-          className="grid h-8 w-8 place-items-center rounded-lg bg-raised/60 text-muted"
+          className="grid h-11 w-11 place-items-center border-2 border-line bg-surface text-muted"
         >
           {theme === 'dark' ? <Sun size={15} /> : <Moon size={15} />}
         </button>
+        <details className="relative">
+          <summary className="grid min-h-11 cursor-pointer list-none place-items-center border-2 border-line bg-surface px-2 text-xs font-semibold text-ink [&::-webkit-details-marker]:hidden">
+            Các mục
+          </summary>
+          <nav aria-label="Tất cả màn hình" className="absolute right-0 top-full z-40 mt-2 w-60 border-2 border-line bg-surface p-2 shadow-soft">
+            {[...NAV, { to: '/settings', label: 'Cài đặt', icon: SettingsIcon }].map((item) => (
+              <NavLink key={item.to} to={item.to} end={item.to === '/'}
+                onClick={(event) => event.currentTarget.closest('details')?.removeAttribute('open')}
+                className={({ isActive }) => cn('flex min-h-12 items-center gap-3 border-2 px-3 py-2 text-sm font-semibold', isActive ? 'border-mint text-mint' : 'border-transparent text-ink hover:border-line')}>
+                <item.icon size={16} />{item.label}
+              </NavLink>
+            ))}
+          </nav>
+        </details>
       </div>
     </header>
   );
 }
 
 const MOBILE_NAV = [
-  { to: '/', label: 'Chính', icon: Home, end: true },
+  { to: '/', label: 'Trang chính', icon: Home, end: true },
   { to: '/drill', label: 'Phản xạ', icon: Zap },
-  { to: '/listen', label: 'Nghe', icon: Headphones },
+  { to: '/listen', label: 'Luyện nghe', icon: Headphones },
   { to: '/scenarios', label: 'Nhập vai', icon: Theater },
-  { to: '/review', label: 'Ôn', icon: Repeat2 },
+  { to: '/review', label: 'Ôn tập', icon: Repeat2 },
 ];
 
 function MobileNav({ due }: { due: number }) {
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-30 flex border-t border-line/70 bg-bg/90 px-1 py-1.5 backdrop-blur-xl lg:hidden">
+    <nav aria-label="Điều hướng nhanh" className="fixed inset-x-0 bottom-0 z-30 flex border-t-2 border-line bg-bg px-1 pt-2 lg:hidden" style={{ paddingBottom: 'max(8px, env(safe-area-inset-bottom))' }}>
       {MOBILE_NAV.map((item) => (
         <NavLink
           key={item.to}
@@ -192,15 +202,15 @@ function MobileNav({ due }: { due: number }) {
           end={item.end}
           className={({ isActive }) =>
             cn(
-              'relative flex flex-1 flex-col items-center gap-1 rounded-lg py-1.5 text-[10px] font-semibold transition-colors',
-              isActive ? 'text-mint' : 'text-faint',
+              'relative flex min-h-16 min-w-0 flex-1 flex-col items-center gap-1 border-t-2 px-1 py-2 text-center text-xs font-semibold leading-5 transition-none',
+              isActive ? 'border-mint text-mint' : 'border-transparent text-muted',
             )
           }
         >
-          <item.icon size={19} />
+          <item.icon size={24} />
           {item.label}
           {item.to === '/review' && due > 0 && (
-            <span className="absolute right-[22%] top-0.5 h-1.5 w-1.5 rounded-full bg-amber" />
+            <span className="absolute right-2 top-1 h-2 w-2 bg-amber" />
           )}
         </NavLink>
       ))}
