@@ -26,7 +26,7 @@ import { SCENARIO_BY_ID } from '@/data/scenarios';
 import { getChunks } from '@/data/chunks';
 import { looksLikeEcho, scoreAnswer, type MatchResult } from '@/lib/match';
 import { FN_LABEL, type ScenarioTurn } from '@/types';
-import { asset, cn, gradientFor } from '@/lib/utils';
+import { asset, cn } from '@/lib/utils';
 
 /* ============================================================================
  *  ROLE-PLAY — chạy hội thoại theo lượt.
@@ -260,24 +260,22 @@ export function ScenarioPlayer() {
 
       <Card className="!p-0">
         <div
-          className="relative flex items-center gap-3 overflow-hidden p-4"
-          style={{ background: gradientFor(scenario.id + scenario.title) }}
+          className="relative flex items-center gap-3 overflow-hidden border-b-2 border-line bg-surface p-4"
         >
           {scenario.image && (
             <img
               src={asset(scenario.image)}
               alt=""
-              className="absolute inset-0 h-full w-full object-cover opacity-45"
+              className="absolute inset-0 h-full w-full object-cover"
               onError={(e) => {
                 (e.currentTarget as HTMLImageElement).style.display = 'none';
               }}
             />
           )}
-          <div className="absolute inset-0 bg-black/45" />
-          <span className="relative text-2xl">{scenario.emoji}</span>
-          <div className="relative min-w-0">
-            <div className="truncate font-bold text-white">{scenario.titleVi}</div>
-            <div className="truncate text-xs text-white/70">{scenario.contextVi}</div>
+          <span className="relative border-2 border-line bg-surface p-1 text-2xl">{scenario.emoji}</span>
+          <div className="relative min-w-0 border-2 border-line bg-surface px-3 py-2">
+            <div className="font-bold leading-6 text-ink">{scenario.titleVi}</div>
+            <div className="text-xs leading-5 text-muted">{scenario.contextVi}</div>
           </div>
         </div>
 

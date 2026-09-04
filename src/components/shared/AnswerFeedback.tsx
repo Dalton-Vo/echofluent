@@ -40,12 +40,12 @@ export function AnswerFeedback({
   return (
     <div
       className={cn(
-        'animate-slide-up fixed inset-x-0 bottom-0 z-40 border-t backdrop-blur',
+        'animate-slide-up fixed inset-x-0 bottom-0 z-40 border-t-2 bg-surface',
         tone === 'mint'
-          ? 'border-mint/40 bg-mint/[.12]'
+          ? 'border-mint'
           : tone === 'rose'
-            ? 'border-rose/40 bg-rose/[.12]'
-            : 'border-amber/40 bg-amber/[.12]',
+            ? 'border-rose'
+            : 'border-amber',
       )}
       role="status"
       aria-live="polite"
@@ -55,10 +55,10 @@ export function AnswerFeedback({
           className={cn(
             'animate-stamp grid h-11 w-11 shrink-0 place-items-center rounded-full',
             tone === 'mint'
-              ? 'bg-mint text-[#04120c]'
+              ? 'bg-mint text-bg'
               : tone === 'rose'
-                ? 'bg-rose text-white'
-                : 'bg-amber text-[#1a1200]',
+                ? 'bg-rose text-bg'
+                : 'bg-amber text-bg',
           )}
         >
           {pass ? <Check size={22} /> : <X size={22} />}
@@ -91,12 +91,12 @@ export function AnswerFeedback({
             type="button"
             onClick={action}
             className={cn(
-              'shrink-0 rounded-xl px-5 py-2.5 text-sm font-bold transition active:scale-95',
+              'btn shrink-0 px-5 text-sm font-bold',
               tone === 'mint'
-                ? 'bg-mint text-[#04120c] hover:brightness-110'
+                ? 'bg-mint text-bg'
                 : tone === 'rose'
-                  ? 'bg-rose text-white hover:brightness-110'
-                  : 'bg-amber text-[#1a1200] hover:brightness-110',
+                  ? 'bg-rose text-bg'
+                  : 'bg-amber text-bg',
             )}
           >
             {actionLabel}
@@ -126,7 +126,7 @@ export function Confetti({ count = 24 }: { count?: number }) {
         left: Math.round((i * 97 + 13) % 100),
         delay: ((i * 37) % 60) / 100,
         hue: ['bg-mint', 'bg-violet', 'bg-amber', 'bg-sky'][i % 4],
-        size: 6 + (i % 3) * 3,
+        size: 8 + (i % 3) * 4,
       })),
     [count],
   );
@@ -143,11 +143,11 @@ export function Confetti({ count = 24 }: { count?: number }) {
       {bits.map((b, i) => (
         <span
           key={i}
-          className={cn('animate-confetti absolute top-0 block rounded-[2px]', b.hue)}
+          className={cn('animate-confetti absolute top-0 block', b.hue)}
           style={{
             left: `${b.left}%`,
             width: b.size,
-            height: b.size * 1.6,
+            height: b.size,
             animationDelay: `${b.delay}s`,
           }}
         />

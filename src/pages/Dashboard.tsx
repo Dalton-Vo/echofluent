@@ -147,7 +147,7 @@ export function Dashboard() {
           </div>
           <div className="h-1 w-full bg-line/60">
             <div
-              className="h-full bg-gradient-to-r from-mint to-violet transition-[width] duration-700"
+              className="h-full bg-mint transition-none"
               style={{ width: `${goalPct}%` }}
             />
           </div>
@@ -257,7 +257,7 @@ export function Dashboard() {
               <div className="flex items-start gap-3.5">
                 <div
                   className={cn(
-                    'grid h-11 w-11 shrink-0 place-items-center rounded-xl transition-transform group-hover:scale-105',
+                    'grid h-12 w-12 shrink-0 place-items-center rounded-xl border-2 border-current',
                     {
                       mint: 'bg-mint/12 text-mint',
                       sky: 'bg-sky/12 text-sky',
@@ -269,7 +269,7 @@ export function Dashboard() {
                   <m.icon size={20} />
                 </div>
                 <div className="min-w-0">
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
                     <h3 className="font-bold text-ink">{m.title}</h3>
                     <span className="text-[11px] text-faint">{m.time}</span>
                   </div>
@@ -513,13 +513,13 @@ function MiniHeat({
         return (
           <div key={d.key} className="flex min-w-0 flex-1 flex-col items-center gap-1.5">
             <div
-              className="w-full rounded-md bg-raised transition-all"
+              className="flex w-full items-end bg-line"
               style={{ height: 56 }}
               title={`${d.key} — ${Math.round(d.minutes)} phút`}
             >
               <div
-                className="w-full rounded-md bg-gradient-to-t from-mint/60 to-mint transition-[height] duration-500"
-                style={{ height: `${Math.max(pct > 0 ? 12 : 0, pct * 100)}%`, marginTop: `${(1 - Math.max(pct > 0 ? 0.12 : 0, pct)) * 100}%` }}
+                className="w-full bg-mint"
+                style={{ height: Math.ceil(pct * 14) * 4 }}
               />
             </div>
             <span className="text-[10px] text-faint">{WEEKDAYS_VI[dow]}</span>

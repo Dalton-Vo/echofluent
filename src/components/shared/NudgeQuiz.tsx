@@ -156,7 +156,7 @@ export function NudgeQuiz() {
         type="button"
         onClick={fire}
         title="Hỏi luôn bây giờ"
-        className="fixed bottom-4 right-4 z-40 flex items-center gap-1.5 rounded-full border border-line bg-surface/90 px-3 py-1.5 font-mono text-xs text-muted shadow-lg backdrop-blur transition hover:text-ink"
+        className="fixed bottom-28 right-4 z-40 flex min-h-11 items-center gap-2 border-2 border-line bg-surface px-3 py-2 font-mono text-xs text-muted shadow-soft hover:text-ink lg:bottom-4"
       >
         <Zap size={12} className="text-mint" />
         {mins}:{String(secs).padStart(2, '0')}
@@ -168,7 +168,7 @@ export function NudgeQuiz() {
     !mic.supported || mic.state === 'denied' || mic.state === 'nomic' || mic.state === 'unsupported';
 
   return (
-    <div className="fixed inset-0 z-50 grid place-items-center bg-bg/80 p-4 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 grid place-items-center bg-bg p-4">
       {/* Cao tối đa bằng màn hình, rồi cho phần thân tự cuộn.
         * Trước đây thẻ chỉ có `overflow-hidden`: bảng chấm phát âm dài gấp
         * đôi phần còn lại nên bị cắt cụt, và không có cách nào kéo xuống —

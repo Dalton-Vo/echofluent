@@ -23,7 +23,7 @@ import { SHADOW_PACKS, parseShadowLine, plainShadowText } from '@/data/shadowing
 import { shadowAccuracy } from '@/lib/match';
 import { DOMAIN_LABEL, type ShadowPack } from '@/types';
 import { withinLevel } from '@/lib/level';
-import { asset, cn, gradientFor } from '@/lib/utils';
+import { asset, cn } from '@/lib/utils';
 
 /* ============================================================================
  *  SHADOWING — nói ĐÈ lên giọng mẫu, chậm hơn khoảng nửa giây.
@@ -118,11 +118,9 @@ function PackPicker({ onPick }: { onPick: (id: string) => void }) {
             style={{ animationDelay: `${i * 40}ms` }}
           >
             <div
-              className="h-24 w-full bg-cover bg-center"
+              className="h-24 w-full border-b-2 border-line bg-surface bg-cover bg-center"
               style={{
-                backgroundImage: `url(${asset(`/images/packs/${p.id}.jpg`)}), ${gradientFor(
-                  p.id + p.title,
-                )}`,
+                backgroundImage: `url(${asset(`/images/packs/${p.id}.jpg`)})`,
               }}
             />
             <div className="p-4">

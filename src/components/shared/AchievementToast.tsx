@@ -39,7 +39,7 @@ export function AchievementToast() {
           type="button"
           onClick={dismiss}
           style={{ animationDelay: `${i * 90}ms` }}
-          className="animate-stamp pointer-events-auto flex items-center gap-3 rounded-2xl border border-mint/30 bg-surface px-4 py-3 shadow-[0_16px_50px_-16px_rgba(0,0,0,.8)]"
+          className="animate-stamp pointer-events-auto flex max-w-[calc(100vw-32px)] items-center gap-3 border-2 border-mint bg-surface px-4 py-3 shadow-soft"
         >
           <span className="text-2xl">{a.emoji}</span>
           <span className="text-left">

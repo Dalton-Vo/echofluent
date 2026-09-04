@@ -6,9 +6,9 @@ import { useStore } from '@/store/useStore';
 import { SCENARIOS } from '@/data/scenarios';
 import { DOMAIN_LABEL, type Domain } from '@/types';
 import { withinLevel } from '@/lib/level';
-import { asset, cn, gradientFor } from '@/lib/utils';
+import { asset, cn } from '@/lib/utils';
 
-/* Danh sách 12 tình huống. Ảnh minh hoạ là tuỳ chọn — thiếu thì tự vẽ gradient. */
+/* Danh sách tình huống. Ảnh minh hoạ là tuỳ chọn — thiếu thì dùng nền đặc. */
 
 const FILTERS: { value: Domain | 'all'; label: string }[] = [
   { value: 'all', label: 'Tất cả' },
@@ -114,23 +114,21 @@ export function Scenarios() {
               style={{ animationDelay: `${i * 35}ms` }}
             >
               <div
-                className="relative flex h-24 items-end justify-between overflow-hidden p-4"
-                style={{ background: gradientFor(s.id + s.title) }}
+                className="relative flex h-24 items-end justify-between overflow-hidden border-b-2 border-line bg-surface p-4"
               >
                 {s.image && (
                   <img
                     src={asset(s.image)}
                     alt=""
-                    className="absolute inset-0 h-full w-full object-cover opacity-60"
+                    className="absolute inset-0 h-full w-full object-cover"
                     onError={(e) => {
                       (e.currentTarget as HTMLImageElement).style.display = 'none';
                     }}
                   />
                 )}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
-                <span className="relative text-3xl drop-shadow">{s.emoji}</span>
+                <span className="relative border-2 border-line bg-surface p-1 text-3xl">{s.emoji}</span>
                 {progress && (
-                  <span className="relative rounded-full bg-mint px-2 py-0.5 text-[10px] font-bold text-[#04120c]">
+                  <span className="relative border-2 border-mint bg-mint px-2 py-1 text-xs font-bold text-bg">
                     <Check size={10} className="mr-0.5 inline" />
                     {progress.best}%
                   </span>

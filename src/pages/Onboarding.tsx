@@ -50,21 +50,12 @@ export function Onboarding() {
 
   return (
     <div
-      className="grain relative min-h-screen overflow-hidden bg-bg"
+      className="relative min-h-screen overflow-hidden bg-bg"
       style={{ backgroundImage: `url(${asset('/images/hero.jpg')})`, backgroundSize: 'cover' }}
     >
-      <div
-        className="pointer-events-none absolute -left-40 -top-40 h-[420px] w-[420px] rounded-full blur-[120px]"
-        style={{ background: 'rgb(var(--c-mint) / .16)' }}
-      />
-      <div
-        className="pointer-events-none absolute -bottom-40 -right-32 h-[380px] w-[380px] rounded-full blur-[120px]"
-        style={{ background: 'rgb(var(--c-violet) / .18)' }}
-      />
-
       <div className="relative mx-auto flex min-h-screen max-w-lg flex-col justify-center px-5 py-10">
-        <div className="mb-7 flex items-center gap-3">
-          <div className="grid h-12 w-12 place-items-center rounded-2xl bg-mint text-2xl text-[#04120c]">
+        <div className="mb-7 flex items-center gap-3 border-2 border-line bg-surface p-4">
+          <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-mint text-2xl text-bg">
             🗣️
           </div>
           <div>
