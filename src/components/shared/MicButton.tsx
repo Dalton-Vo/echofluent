@@ -5,11 +5,8 @@ import type { MicState } from '@/hooks/useSpeech';
 /**
  * Nút thu âm lớn — trung tâm của mọi bài luyện nói.
  *
- * Điểm mấu chốt là VÒNG SÁNG NẢY THEO GIỌNG. Trước đây nút chỉ nhấp nháy một
- * nhịp cố định, nên khi micro không ăn tiếng thì nhìn vẫn y hệt lúc chạy tốt —
- * người dùng nói cả câu rồi mới biết công cốc. Giờ vòng sáng phồng ra theo
- * đúng độ to của tiếng nói: im lặng là nó đứng yên, và chỉ cần liếc mắt là
- * biết ngay micro có nghe thấy mình hay không.
+ * Viền đặc báo phiên thu đang mở; các ô âm lượng chỉ sáng theo tín hiệu thật.
+ * Không dùng nhịp nhấp nháy giả khiến im lặng trông như đang thu được tiếng.
  */
 export function MicButton({
   state,
@@ -48,35 +45,18 @@ export function MicButton({
   const unavailable = blocked || noDevice || unsupported;
 
   const dim = size === 'lg' ? 'h-20 w-20' : 'h-14 w-14';
-  const icon = size === 'lg' ? 30 : 22;
-
-  // Vòng sáng to dần theo giọng. Có sàn 1.0 để lúc im lặng nó không teo mất.
-  const ring = 1 + Math.min(level, 1) * 0.85;
+  const icon = size === 'lg' ? 32 : 24;
+  const pixels = size === 'lg' ? 80 : 56;
+  const outline = size === 'lg'
+    ? 'M28 4H52V8H60V16H68V24H72V32H76V48H72V56H68V64H60V72H52V76H28V72H20V64H12V56H8V48H4V32H8V24H12V16H20V8H28Z'
+    : 'M20 4H36V8H44V12H48V20H52V36H48V44H44V48H36V52H20V48H12V44H8V36H4V20H8V12H12V8H20Z';
   const loud = level > 0.06;
 
   return (
     <div className="flex flex-col items-center gap-2">
       <div className="relative grid place-items-center">
         {listening && (
-          <>
-            {/* vòng phản ứng tức thì theo âm lượng */}
-            <span
-              aria-hidden
-              className="pointer-events-none absolute rounded-full bg-mint/25 transition-none"
-              style={{
-                width: size === 'lg' ? 80 : 56,
-                height: size === 'lg' ? 80 : 56,
-                transform: `scale(${ring})`,
-                opacity: 0.25 + Math.min(level, 1) * 0.5,
-              }}
-            />
-            {/* nhịp nền chậm, cho biết phiên nghe vẫn đang mở */}
-            <span
-              aria-hidden
-              className="pointer-events-none absolute animate-pulse-ring rounded-full bg-rose/30"
-              style={{ width: size === 'lg' ? 80 : 56, height: size === 'lg' ? 80 : 56 }}
-            />
-          </>
+          <span aria-hidden="true" className="pointer-events-none absolute -inset-2 border-2 border-rose" />
         )}
 
         <button
@@ -85,19 +65,23 @@ export function MicButton({
           onClick={listening ? onStop : onStart}
           aria-label={listening ? 'Dừng thu âm' : 'Bắt đầu nói'}
           className={cn(
-            'relative grid place-items-center rounded-full transition-all active:scale-95 disabled:opacity-60',
+            'group relative grid place-items-center bg-transparent transition-none enabled:active:translate-y-1 disabled:cursor-not-allowed',
             dim,
             listening
-              ? 'bg-rose text-white shadow-[0_0_40px_-8px_rgb(var(--c-rose)/.8)]'
+              ? 'text-bg'
               : unavailable
-                ? 'border border-line bg-raised text-faint'
-                : 'bg-mint text-[#04120c] shadow-glow hover:brightness-110',
+                ? 'text-muted'
+                : disabled || starting ? 'text-muted' : 'text-bg',
           )}
         >
+          <svg aria-hidden="true" width={pixels} height={pixels} viewBox={`0 0 ${pixels} ${pixels}`} shapeRendering="crispEdges" className="pointer-events-none absolute inset-0">
+            <path d={outline} strokeWidth={2} strokeLinejoin="miter" className={cn('stroke-ink', listening ? 'fill-rose' : unavailable || disabled || starting ? 'fill-surface' : 'fill-mint group-hover:fill-ink')} />
+          </svg>
+          <span className="relative">
           {starting ? (
             <LoaderCircle size={icon} className="animate-spin" />
           ) : listening ? (
-            <Square size={icon - 6} />
+            <Square size={icon - 8} />
           ) : blocked ? (
             <ShieldAlert size={icon} />
           ) : unavailable ? (
@@ -105,12 +89,13 @@ export function MicButton({
           ) : (
             <Mic size={icon} />
           )}
+          </span>
         </button>
       </div>
 
       {/* Thanh mức âm — bằng chứng thứ hai, rõ ràng hơn cả vòng sáng */}
       {listening && (
-        <div className="flex h-4 items-end gap-[3px]" aria-hidden>
+        <div className="flex h-10 items-end gap-1" aria-hidden>
           {Array.from({ length: 9 }, (_, i) => {
             const threshold = (i + 1) / 11;
             const on = level >= threshold;
@@ -118,10 +103,10 @@ export function MicButton({
               <span
                 key={i}
                 className={cn(
-                  'w-[3px] rounded-full transition-all duration-75',
+                  'w-1 transition-none',
                   on ? 'bg-mint' : 'bg-line',
                 )}
-                style={{ height: on ? 6 + i * 1.4 : 4 }}
+                style={{ height: on ? 8 + i * 4 : 4 }}
               />
             );
           })}
