@@ -1,5 +1,11 @@
+const palette = ['bg', 'surface', 'raised', 'line', 'ink', 'muted', 'faint', 'mint', 'violet', 'amber', 'rose', 'sky'];
+const accents = new Set(['mint', 'violet', 'amber', 'rose', 'sky']);
+const solid = Object.fromEntries(palette.map((name) => [name, () => `rgb(var(--c-${name}))`]));
+const hardShadow = '4px 4px 0 0 rgb(var(--c-line))';
+
 /** @type {import('tailwindcss').Config} */
 export default {
+  future: { hoverOnlyWhenSupported: true },
   content: ['./index.html', './src/**/*.{ts,tsx}'],
   theme: {
     extend: {
@@ -20,67 +26,79 @@ export default {
       fontFamily: {
         sans: ['"Plus Jakarta Sans"', 'Inter', 'system-ui', '-apple-system', 'Segoe UI', 'sans-serif'],
         mono: ['"JetBrains Mono"', 'ui-monospace', 'SFMono-Regular', 'monospace'],
+        pixel: ['"Press Start 2P"', 'ui-monospace', 'monospace'],
       },
+      // Legacy translucent accent panels become opaque paper, keeping their colored text/borders.
+      backgroundColor: Object.fromEntries(palette.map((name) => [name, ({ opacityValue }) =>
+        `rgb(var(--c-${accents.has(name) && Number(opacityValue) < 1 ? 'surface' : name}))`,
+      ])),
+      borderColor: solid,
+      ringColor: solid,
+      borderWidth: { DEFAULT: '2px' },
+      spacing: {
+        ...Object.fromEntries(Array.from({ length: 97 }, (_, n) => [n, `${n * 4}px`])),
+        // Keep existing class names; snap legacy half steps upward to the four-pixel grid.
+        '0.5': '4px', '1.5': '8px', '2.5': '12px', '3.5': '16px',
+      },
+      fontSize: { xs: ['14px', '20px'], sm: ['16px', '24px'] },
       borderRadius: {
-        xl: '14px',
-        '2xl': '18px',
-        '3xl': '26px',
+        DEFAULT: '0', sm: '0', md: '0', lg: '0', xl: '0', '2xl': '0', '3xl': '0', full: '0',
       },
       boxShadow: {
-        soft: '0 1px 2px rgba(0,0,0,.28), 0 8px 24px -12px rgba(0,0,0,.5)',
-        glow: '0 0 0 1px rgb(var(--c-mint) / .25), 0 0 34px -8px rgb(var(--c-mint) / .45)',
+        DEFAULT: hardShadow, sm: hardShadow, md: hardShadow, lg: hardShadow,
+        xl: hardShadow, '2xl': '8px 8px 0 0 rgb(var(--c-line))',
+        inner: 'inset 4px 4px 0 0 rgb(var(--c-line))',
+        soft: hardShadow,
+        glow: '4px 4px 0 0 rgb(var(--c-mint))',
       },
+      transitionDuration: Object.fromEntries(['DEFAULT', '0', '75', '100', '150', '200', '300', '500', '700', '1000'].map((key) => [key, '0ms'])),
+      transitionTimingFunction: { DEFAULT: 'steps(1, end)', linear: 'steps(1, end)', in: 'steps(1, end)', out: 'steps(1, end)', 'in-out': 'steps(1, end)' },
       keyframes: {
         'fade-up': {
-          '0%': { opacity: '0', transform: 'translateY(8px)' },
-          '100%': { opacity: '1', transform: 'translateY(0)' },
+          from: { transform: 'translateY(8px)' }, to: { transform: 'translateY(0)' },
         },
         pulseRing: {
-          '0%': { transform: 'scale(.9)', opacity: '.7' },
-          '70%': { transform: 'scale(1.35)', opacity: '0' },
-          '100%': { transform: 'scale(1.35)', opacity: '0' },
+          '0%, 100%': { borderColor: 'rgb(var(--c-line))' },
+          '50%': { borderColor: 'rgb(var(--c-rose))' },
         },
         shimmer: {
-          '100%': { transform: 'translateX(100%)' },
+          from: { visibility: 'visible' }, to: { visibility: 'hidden' },
         },
         pop: {
-          '0%': { transform: 'scale(.86)', opacity: '0' },
-          '60%': { transform: 'scale(1.04)', opacity: '1' },
-          '100%': { transform: 'scale(1)', opacity: '1' },
+          from: { transform: 'translateY(4px)' }, to: { transform: 'translateY(0)' },
         },
         /* Sai thì lắc — phản hồi kiểu Duolingo: biết ngay mà không cần đọc chữ */
         shake: {
           '0%, 100%': { transform: 'translateX(0)' },
-          '15%, 45%, 75%': { transform: 'translateX(-7px)' },
-          '30%, 60%, 90%': { transform: 'translateX(7px)' },
+          '25%, 75%': { transform: 'translateX(-4px)' },
+          '50%': { transform: 'translateX(4px)' },
         },
         /* Đúng thì đóng dấu: nảy quá đà một nhịp rồi mới ổn định */
         stamp: {
-          '0%': { transform: 'scale(.4)', opacity: '0' },
-          '50%': { transform: 'scale(1.18)', opacity: '1' },
-          '75%': { transform: 'scale(.94)' },
-          '100%': { transform: 'scale(1)', opacity: '1' },
+          from: { transform: 'translateY(-8px)' }, to: { transform: 'translateY(0)' },
         },
         /* Dải phản hồi trượt lên từ đáy màn hình */
         'slide-up': {
-          '0%': { transform: 'translateY(100%)' },
+          '0%': { transform: 'translateY(16px)' },
           '100%': { transform: 'translateY(0)' },
         },
         /* Mảnh giấy vụn ăn mừng */
         confetti: {
-          '0%': { transform: 'translateY(0) rotate(0deg)', opacity: '1' },
-          '100%': { transform: 'translateY(320px) rotate(620deg)', opacity: '0' },
+          '0%': { transform: 'translateY(0)', visibility: 'visible' },
+          '100%': { transform: 'translateY(320px)', visibility: 'hidden' },
         },
       },
       animation: {
-        'fade-up': 'fade-up .35s cubic-bezier(.22,1,.36,1) both',
-        'pulse-ring': 'pulseRing 1.6s cubic-bezier(.24,.6,.36,1) infinite',
-        shimmer: 'shimmer 1.8s infinite',
-        pop: 'pop .3s cubic-bezier(.22,1,.36,1) both',
-        shake: 'shake .5s cubic-bezier(.36,.07,.19,.97) both',
-        stamp: 'stamp .45s cubic-bezier(.22,1.4,.36,1) both',
-        'slide-up': 'slide-up .32s cubic-bezier(.22,1,.36,1) both',
-        confetti: 'confetti 1.5s cubic-bezier(.3,.7,.5,1) forwards',
+        'fade-up': 'fade-up .16s steps(2, end) both',
+        'pulse-ring': 'pulseRing 1.6s steps(1, end) infinite',
+        shimmer: 'shimmer 1.8s steps(1, end) infinite',
+        pop: 'pop .12s steps(1, end) both',
+        shake: 'shake .32s steps(1, end) both',
+        stamp: 'stamp .16s steps(2, end) both',
+        'slide-up': 'slide-up .16s steps(4, end) both',
+        confetti: 'confetti 1.5s steps(20, end) forwards',
+        spin: 'spin 1s steps(4, end) infinite',
+        pulse: 'shimmer 1.8s steps(1, end) infinite',
       },
     },
   },
