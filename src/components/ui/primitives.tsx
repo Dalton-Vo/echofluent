@@ -31,11 +31,11 @@ export function Chip({
 }) {
   const tones: Record<string, string> = {
     default: '',
-    mint: 'border-mint/30 bg-mint/10 text-mint',
-    violet: 'border-violet/30 bg-violet/10 text-violet',
-    amber: 'border-amber/30 bg-amber/10 text-amber',
-    rose: 'border-rose/30 bg-rose/10 text-rose',
-    sky: 'border-sky/30 bg-sky/10 text-sky',
+    mint: 'border-mint text-mint',
+    violet: 'border-violet text-violet',
+    amber: 'border-amber text-amber',
+    rose: 'border-rose text-rose',
+    sky: 'border-sky text-sky',
   };
   return <span className={cn('chip', tones[tone], className)}>{children}</span>;
 }
@@ -57,17 +57,17 @@ export function ProgressBar({
   const bg = { mint: 'bg-mint', violet: 'bg-violet', amber: 'bg-amber', sky: 'bg-sky' }[tone];
   return (
     <div
-      className={cn('w-full overflow-hidden rounded-full bg-raised', className)}
-      style={{ height }}
+      className={cn('flex w-full gap-1', className)}
+      style={{ height: Math.max(4, Math.ceil(height / 4) * 4) }}
       role="progressbar"
+      aria-label="Tiến độ"
       aria-valuenow={Math.round(pct)}
       aria-valuemin={0}
       aria-valuemax={100}
     >
-      <div
-        className={cn('h-full rounded-full transition-[width] duration-500 ease-out', bg)}
-        style={{ width: `${pct}%` }}
-      />
+      {Array.from({ length: 20 }, (_, i) => (
+        <span key={i} aria-hidden="true" className={cn('h-full min-w-0 flex-1', i < Math.floor(pct / 5) ? bg : 'bg-line')} />
+      ))}
     </div>
   );
 }
@@ -86,26 +86,27 @@ export function Stat({
   tone?: 'mint' | 'violet' | 'amber' | 'sky' | 'rose';
 }) {
   const tones: Record<string, string> = {
-    mint: 'text-mint bg-mint/10',
-    violet: 'text-violet bg-violet/10',
-    amber: 'text-amber bg-amber/10',
-    sky: 'text-sky bg-sky/10',
-    rose: 'text-rose bg-rose/10',
+    mint: 'text-mint border-mint',
+    violet: 'text-violet border-violet',
+    amber: 'text-amber border-amber',
+    sky: 'text-sky border-sky',
+    rose: 'text-rose border-rose',
   };
+  const numeric = typeof value === 'number' || (typeof value === 'string' && /^[\d\s.,%:+/-]+$/.test(value));
   return (
-    <div className="card flex items-center gap-3.5 p-4">
+    <div className="card flex flex-col items-start gap-3 p-4 sm:flex-row">
       {icon && (
-        <div className={cn('grid h-10 w-10 shrink-0 place-items-center rounded-xl', tones[tone])}>
+        <div className={cn('grid h-10 w-10 shrink-0 place-items-center border-2 bg-surface', tones[tone])}>
           {icon}
         </div>
       )}
       <div className="min-w-0">
         {/* Nhãn tiếng Việt khá dài — cho phép xuống dòng thay vì cắt cụt trên màn hình hẹp */}
-        <div className="text-[11px] font-semibold uppercase leading-tight tracking-wider text-faint">
+        <div className="text-xs font-semibold leading-5 text-muted">
           {label}
         </div>
-        <div className="mt-0.5 text-xl font-bold leading-tight text-ink">{value}</div>
-        {sub && <div className="mt-0.5 text-xs leading-snug text-muted">{sub}</div>}
+        <div className={cn('mt-1 break-words leading-8 text-ink', numeric ? 'font-pixel text-base' : 'text-xl font-bold')}>{value}</div>
+        {sub && <div className="mt-1 text-xs leading-5 text-muted">{sub}</div>}
       </div>
     </div>
   );
@@ -121,10 +122,10 @@ export function SectionHeader({
   action?: ReactNode;
 }) {
   return (
-    <div className="mb-3 flex items-end justify-between gap-4">
-      <div>
+    <div className="mb-4 flex flex-wrap items-end justify-between gap-3 border-l-4 border-mint pl-3">
+      <div className="min-w-0 flex-1 basis-48">
         <h2 className="text-lg font-bold text-ink">{title}</h2>
-        {desc && <p className="mt-0.5 text-sm text-muted">{desc}</p>}
+        {desc && <p className="mt-1 text-sm leading-6 text-muted">{desc}</p>}
       </div>
       {action}
     </div>
@@ -143,7 +144,7 @@ export function Empty({
   action?: ReactNode;
 }) {
   return (
-    <div className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-line px-6 py-14 text-center">
+    <div className="flex flex-col items-center justify-center gap-2 rounded-2xl border-2 border-line bg-surface px-6 py-14 text-center">
       <div className="text-4xl">{emoji}</div>
       <div className="font-semibold text-ink">{title}</div>
       {desc && <p className="max-w-sm text-sm text-muted">{desc}</p>}
@@ -166,8 +167,10 @@ export function Toggle({
   return (
     <button
       type="button"
+      role="switch"
+      aria-checked={checked}
       onClick={() => onChange(!checked)}
-      className="flex w-full items-center justify-between gap-4 rounded-xl px-1 py-2.5 text-left transition hover:bg-raised/50"
+      className="flex min-h-12 w-full items-center justify-between gap-4 rounded-xl px-1 py-3 text-left transition-none hover:bg-raised"
     >
       <span className="min-w-0">
         <span className="block text-sm font-semibold text-ink">{label}</span>
@@ -175,14 +178,14 @@ export function Toggle({
       </span>
       <span
         className={cn(
-          'relative h-6 w-11 shrink-0 rounded-full transition-colors',
+          'relative h-8 w-14 shrink-0',
           checked ? 'bg-mint' : 'bg-line',
         )}
       >
         <span
           className={cn(
-            'absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all',
-            checked ? 'left-[22px]' : 'left-0.5',
+            'absolute top-1 h-6 w-6 bg-bg',
+            checked ? 'left-7' : 'left-1',
           )}
         />
       </span>
@@ -202,16 +205,17 @@ export function Segmented<T extends string>({
   size?: 'sm' | 'md';
 }) {
   return (
-    <div className="inline-flex rounded-xl border border-line bg-raised/50 p-1">
+    <div className="inline-flex max-w-full flex-wrap gap-1 rounded-xl border-2 border-line bg-surface p-1">
       {options.map((o) => (
         <button
           key={o.value}
           type="button"
           onClick={() => onChange(o.value)}
+          aria-pressed={value === o.value}
           className={cn(
-            'rounded-lg font-semibold transition-all',
-            size === 'sm' ? 'px-2.5 py-1 text-xs' : 'px-3.5 py-1.5 text-sm',
-            value === o.value ? 'bg-mint text-[#04120c]' : 'text-muted hover:text-ink',
+            'min-h-11 rounded-lg border-2 font-semibold transition-none',
+            size === 'sm' ? 'px-2 py-1 text-xs' : 'px-3 py-2 text-sm',
+            value === o.value ? 'border-mint bg-mint text-bg' : 'border-transparent text-muted hover:border-line hover:text-ink',
           )}
         >
           {o.label}
