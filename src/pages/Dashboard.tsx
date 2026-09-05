@@ -551,11 +551,15 @@ function WarmupBanner() {
     return (
       <Card className="animate-fade-up border-sky/30 bg-sky/[.06] !p-4">
         <div className="flex flex-wrap items-center gap-3">
-          <LifeBuoy size={18} className="shrink-0 text-sky" />
-          <p className="min-w-0 flex-1 text-sm text-muted">
-            <strong className="text-ink">Đang làm quen — còn {left} ngày.</strong> Câu mẫu hiện
-            sẵn trước khi bạn nói. Cứ nhại theo cho quen miệng đã.
-          </p>
+          {/* Cụm chữ có bề rộng tối thiểu — thiếu chỗ thì nút rớt xuống dòng dưới,
+              thay vì đoạn văn bị bóp còn một từ mỗi dòng trên điện thoại. */}
+          <div className="flex min-w-[15rem] flex-1 items-start gap-3">
+            <LifeBuoy size={18} className="mt-1 shrink-0 text-sky" />
+            <p className="min-w-0 flex-1 text-sm text-muted">
+              <strong className="text-ink">Đang làm quen — còn {left} ngày.</strong> Câu mẫu hiện
+              sẵn trước khi bạn nói. Cứ nhại theo cho quen miệng đã.
+            </p>
+          </div>
           <button
             type="button"
             className="btn-quiet text-xs"

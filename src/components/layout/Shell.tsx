@@ -202,7 +202,7 @@ function MobileNav({ due }: { due: number }) {
           end={item.end}
           className={({ isActive }) =>
             cn(
-              'relative flex min-h-16 min-w-0 flex-1 flex-col items-center gap-1 border-t-2 px-1 py-2 text-center text-xs font-semibold leading-5 transition-none',
+              'relative flex min-h-16 min-w-0 flex-1 flex-col items-center gap-1 border-t-2 px-1 py-2 text-center text-[11px] font-semibold leading-4 transition-none',
               isActive ? 'border-mint text-mint' : 'border-transparent text-muted',
             )
           }
